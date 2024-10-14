@@ -10,12 +10,12 @@
 #define B_QUEEN 5
 #define B_KING 6
 
-#define W_PAWN 7
-#define W_KNIGHT 8
-#define W_BISHOP 9
-#define W_ROOK 10
-#define W_QUEEN 11
-#define W_KING 12
+#define W_PAWN 9
+#define W_KNIGHT 10
+#define W_BISHOP 11
+#define W_ROOK 12
+#define W_QUEEN 13
+#define W_KING 14
 
 //Fen
 unsigned char* fenToArray(char* fen);
