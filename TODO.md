@@ -1,3 +1,12 @@
+Gameplay
+- Calculating Movement Squares
+    - Pawn
+    - Knight
+    - Bishop
+    - Rook
+    - Queen
+    - King
+
 Refactoring
 - Move stuff into a 2D array (compiler will optimise out with `gcc ... -O3 ...`)
 - Put stuff into Enums etc
