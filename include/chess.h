@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define PAWN 1
+#define KNIGHT 2
+#define BISHOP 3
+#define ROOK 4
+#define QUEEN 5
+#define KING 6
+
 
 #define B_PAWN 1
 #define B_KNIGHT 2
