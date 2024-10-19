@@ -3,7 +3,17 @@
 int main(int argc, char* argv[]) {
     unsigned char* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     printBoard(board);
-    
+    uint64_t pawnSquares = getPawnSquares(board, 17);
+
+    for(int i = 0; i < 64; i++){
+        if(i % 8 == 0)
+            printf("\n");
+        if((1ULL << i) & pawnSquares)
+            printf("X");
+        else
+            printf("-");
+    }
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL) { goto error;}

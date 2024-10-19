@@ -31,14 +31,26 @@
 #define W_QUEEN 13
 #define W_KING 14
 
+#define IS_EMPTY(index) !index
+
+//Positional Macros
+#define COLOUR(piece) ((piece & (1 << 3)) % 7)
+#define COLOUR_DIRECTION(colour) ((colour) == 0 ? 1 : -1)
+
+//Directions
+#define ANTERIOR_SQUARE(squareIndex, direction) (squareIndex + direction * 8)
+#define SINISTRAL_SQAURE(squareIndex, direction) (squareIndex + direction)
+#define DEXTRAL_SQUARE(squareIndex, direction) (squareIndex - direction)
+#define POSTERIOR_SQUARE(squareIndex, direction) (squareIndex - direction * 8)
+
 //Orientation 
-#define WHITE_DIRECTION -1
-#define BLACK_DIRECTION 1
+#define WHITE_DIRECTION (-1)
+#define BLACK_DIRECTION (1)
 
 //Screen Constants
-#define SCREEN_LENGTH 800
-#define SCREEN_HEIGHT 800
-#define SQUARE_SIZE (int) SCREEN_LENGTH / 8
+#define SCREEN_LENGTH (800)
+#define SCREEN_HEIGHT (800)
+#define SQUARE_SIZE (SCREEN_LENGTH / 8)
 
 //Fen
 unsigned char* fenToArray(char* fen);
@@ -50,3 +62,6 @@ void initRectangles();
 void drawSquares(SDL_Renderer* renderer);
 void drawPieces(SDL_Renderer* renderer, unsigned char* board, int rotation);
 void initPiecesTexture(SDL_Renderer* renderer);
+
+//Moves
+uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex);
