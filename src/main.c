@@ -1,9 +1,10 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
-    unsigned char* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //unsigned char* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    unsigned char* board = fenToArray("rnbqkbnr/pp2pppp/8/8/1p1p4/2P5/PP1PPPPP/RNBQKBNR");
     printBoard(board);
-    uint64_t pawnSquares = getPawnSquares(board, 17);
+    uint64_t pawnSquares = getPawnSquares(board, 42);
 
     for(int i = 0; i < 64; i++){
         if(i % 8 == 0)
