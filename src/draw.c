@@ -69,3 +69,14 @@ void drawSquares(SDL_Renderer* renderer) {
     }
 }
 
+void drawHighlightedSquares(uint64_t squares, SDL_Renderer* renderer) {
+    for(int i = 0; i < 64; i++) {
+        if((1ULL << i) & squares){
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 150);
+            SDL_RenderFillRect(renderer, squaresRects[i]);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        }
+    }
+}
+

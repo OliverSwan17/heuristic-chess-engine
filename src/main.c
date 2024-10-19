@@ -2,19 +2,9 @@
 
 int main(int argc, char* argv[]) {
     //unsigned char* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    unsigned char* board = fenToArray("rnbqkbnr/pp2pppp/8/8/1p1p4/2P5/PP1PPPPP/RNBQKBNR");
-    printBoard(board);
-    uint64_t pawnSquares = getPawnSquares(board, 42);
-
-    for(int i = 0; i < 64; i++){
-        if(i % 8 == 0)
-            printf("\n");
-        if((1ULL << i) & pawnSquares)
-            printf("X");
-        else
-            printf("-");
-    }
-
+    unsigned char* board = fenToArray("2P1PP2/p1Pp3p/2p1P1PP/3P1p1p/Pp6/p1P4P/PP1ppPP1/8");
+    uint64_t highlightedSquares = 0;
+    
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL) { goto error;}
@@ -40,12 +30,18 @@ int main(int argc, char* argv[]) {
                             break;
                         }
                     }
-                break;
+                case SDL_MOUSEBUTTONDOWN:
+                    if(e.button.button == SDL_BUTTON_LEFT) {
+                        unsigned char squareSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                        highlightedSquares = getMoves(board, squareSelectionIndex);
+                    }
+                    break;
             }
         }
 
         SDL_RenderClear(renderer);
         drawSquares(renderer);
+        drawHighlightedSquares(highlightedSquares, renderer);
         drawPieces(renderer, board, WHITE_DIRECTION);
         SDL_RenderPresent(renderer);
     }

@@ -31,6 +31,7 @@
 #define W_QUEEN 13
 #define W_KING 14
 
+#define MOUSE_TO_SQUARE_INDEX(x, y) (((x) / 100) + ((y) / 100) * 8)
 #define IS_EMPTY(index) !index
 
 //Positional Macros
@@ -62,6 +63,8 @@ void initRectangles();
 void drawSquares(SDL_Renderer* renderer);
 void drawPieces(SDL_Renderer* renderer, unsigned char* board, int rotation);
 void initPiecesTexture(SDL_Renderer* renderer);
+void drawHighlightedSquares(uint64_t squares, SDL_Renderer* renderer);
 
 //Moves
+uint64_t getMoves(unsigned char* board, unsigned char pieceIndex);
 uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex);
