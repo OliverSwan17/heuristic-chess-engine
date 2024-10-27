@@ -34,6 +34,10 @@
 #define MOUSE_TO_SQUARE_INDEX(x, y) (((x) / 100) + ((y) / 100) * 8)
 #define IS_EMPTY(index) !index
 
+#define GET_FILE(i) (((i) % 8) + 1)
+#define GET_RANK(i) (abs(((i) + 1 + 8 - 1) / 8 - 9))
+
+
 //Positional Macros
 #define COLOUR(piece) ((piece & (1 << 3)) % 7)
 #define COLOUR_DIRECTION(colour) ((colour) == 0 ? 1 : -1)
@@ -68,3 +72,4 @@ void drawHighlightedSquares(uint64_t squares, SDL_Renderer* renderer);
 //Moves
 uint64_t getMoves(unsigned char* board, unsigned char pieceIndex);
 uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex);
+uint64_t getKingSquares(unsigned char* board, unsigned char pieceIndex);

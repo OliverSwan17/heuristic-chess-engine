@@ -2,8 +2,11 @@
 
 uint64_t getMoves(unsigned char* board, unsigned char pieceIndex){
     unsigned char piece = board[pieceIndex];
-    if ((piece & 0b111) == 0b001) {
+    if ((piece & 0b111) == PAWN) {
         return getPawnSquares(board, pieceIndex);
+    }
+    if ((piece & KING) == KING) {
+        return getKingSquares(board, pieceIndex);
     }
     return 0;
 }
@@ -45,4 +48,50 @@ uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex){
     }
 
     return pawnSquares;
+}
+
+uint64_t getKingSquares(unsigned char* board, unsigned char pieceIndex){
+    uint64_t kingSquares = 0;
+    char piece = board[pieceIndex];
+    char pieceColour = COLOUR(piece);
+    char direction = COLOUR_DIRECTION(pieceColour);
+    char rank = GET_RANK(pieceIndex);
+    char file = GET_FILE(pieceIndex);
+    
+    unsigned char cornerTargetSquare;
+    unsigned char targetSquare;
+
+    targetSquare = ANTERIOR_SQUARE(pieceIndex, direction);
+    if((rank - direction) % 9 != 0){
+        if(COLOUR(board[targetSquare]) != pieceColour || board[targetSquare] == EMPTY)
+            kingSquares |= (1ULL << targetSquare);
+        cornerTargetSquare = SINISTRAL_SQAURE(targetSquare, direction);
+        if(((file + direction) % 9 != 0) && (COLOUR(board[cornerTargetSquare]) != pieceColour || board[cornerTargetSquare] == EMPTY))
+            kingSquares |= (1ULL << cornerTargetSquare);
+        cornerTargetSquare = DEXTRAL_SQUARE(targetSquare, direction);
+        if(((file - direction) % 9 != 0) && (COLOUR(board[cornerTargetSquare]) != pieceColour || board[cornerTargetSquare] == EMPTY))
+            kingSquares |= (1ULL << cornerTargetSquare);
+    }
+
+    targetSquare = POSTERIOR_SQUARE(pieceIndex, direction);
+    if((rank + direction) % 9 != 0){
+        if(COLOUR(board[targetSquare]) != pieceColour || board[targetSquare] == EMPTY)
+            kingSquares |= (1ULL << targetSquare);
+        cornerTargetSquare = SINISTRAL_SQAURE(targetSquare, direction);
+        if(((file + direction) % 9 != 0) && (COLOUR(board[cornerTargetSquare]) != pieceColour || board[cornerTargetSquare] == EMPTY))
+            kingSquares |= (1ULL << cornerTargetSquare);
+        cornerTargetSquare = DEXTRAL_SQUARE(targetSquare, direction);
+        if(((file - direction) % 9 != 0) && (COLOUR(board[cornerTargetSquare]) != pieceColour || board[cornerTargetSquare] == EMPTY))
+            kingSquares |= (1ULL << cornerTargetSquare);
+    }
+
+    targetSquare = SINISTRAL_SQAURE(pieceIndex, direction);
+    if(((file + direction) % 9 != 0) && (COLOUR(board[targetSquare]) != pieceColour || board[targetSquare] == EMPTY))
+        kingSquares |= (1ULL << targetSquare);
+
+    targetSquare = DEXTRAL_SQUARE(pieceIndex, direction);
+    if(((file - direction) % 9 != 0) && (COLOUR(board[targetSquare]) != pieceColour || board[targetSquare] == EMPTY))
+        kingSquares |= (1ULL << targetSquare);
+
+    return kingSquares;
 }

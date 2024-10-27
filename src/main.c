@@ -2,7 +2,8 @@
 
 int main(int argc, char* argv[]) {
     //unsigned char* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    unsigned char* board = fenToArray("2P1PP2/p1Pp3p/2p1P1PP/3P1p1p/Pp6/p1P4P/PP1ppPP1/8");
+    //unsigned char* board = fenToArray("2P1PP2/p1Pp3p/2p1P1PP/3P1p1p/Pp6/p1P4P/PP1ppPP1/8");
+    unsigned char* board = fenToArray("8/1K6/3KkKk1/2k1kK2/1k2KKk1/1KK1kk1K/1k1K1K2/Kk5k");
     uint64_t highlightedSquares = 0;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
