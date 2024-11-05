@@ -16,7 +16,8 @@ void initRectangles() {
     for (int y = 0; y < 8; y++){
         for (int x = 0; x < 8; x++){
             squaresRects[y * 8 + x] = (SDL_Rect*)malloc(sizeof(SDL_Rect));
-            if (!squaresRects[y * 8 + x]) {exit(1);}
+            if (!squaresRects[y * 8 + x])
+                exit(1);
 
             squaresRects[y * 8 + x]->x = SQUARE_SIZE * x;
             squaresRects[y * 8 + x]->y = SQUARE_SIZE * y;
@@ -37,6 +38,7 @@ void initRectangles() {
     }
 }
 
+// Need to add bitmasks for the pieces once we start using the other bits for stuff
 void drawPieces(SDL_Renderer* renderer, uint8_t* board, int rotation) {
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
@@ -44,7 +46,7 @@ void drawPieces(SDL_Renderer* renderer, uint8_t* board, int rotation) {
             // has a unique value as defined in chess.h: pawn = 1, knight = 2, bishop = 3, and so on.
             // For white pieces, the value is offset by 8 (e.g., a white pawn has a value of 9).
             // This makes it easy to distinguish piece colors based on their value by checking the 3rd bit.
-            // Therfore, when indexing the spritesheet for white pieces we need to subtract 2 from the value of the white piece.
+            // Therefore, when indexing the spritesheet for white pieces we need to subtract 2 from the value of the white piece.
             // For example, the 7th piece on the spritesheet is the white pawn but a white pawn is represented by 9.
             // So we subtract by 2. This works for all of the white pieces. 
 
@@ -58,12 +60,11 @@ void drawPieces(SDL_Renderer* renderer, uint8_t* board, int rotation) {
 void drawSquares(SDL_Renderer* renderer) {
     for (int y = 0; y < 8; y++){
         for (int x = 0; x < 8; x++){
-            if ((y + x) % 2) {
+            if ((y + x) % 2)
                 SDL_SetRenderDrawColor(renderer, 177, 110, 65, 255);
-            }else {
+            else
                 SDL_SetRenderDrawColor(renderer, 255, 213, 153, 100);
-            }
-
+            
             SDL_RenderFillRect(renderer, squaresRects[y * 8 + x]);
         }
     }

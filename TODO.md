@@ -1,16 +1,5 @@
-Gameplay
-- Calculating Movement Squares
-    - Pawn
-    - Knight
-    - Bishop
-    - Rook
-    - Queen
-    - King
-
-Refactoring
-- Move stuff into a 2D array (compiler will optimise out with `gcc ... -O3 ...`)
-- Put stuff into Enums etc
-- Make UI (maybe just a command line game first to debug the AI etc)
+Refactors
+- Fix the functions in `draw.c` to use bitmasks for refering to pieces. This will ensure that once we start using other bits in the piece representation for indicators for en-passant and castling there will not be any miscalculations.
 
 AI Things
 - Method to evaluate position
