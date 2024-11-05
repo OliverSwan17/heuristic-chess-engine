@@ -37,7 +37,7 @@ void initRectangles() {
     }
 }
 
-void drawPieces(SDL_Renderer* renderer, unsigned char* board, int rotation) {
+void drawPieces(SDL_Renderer* renderer, uint8_t* board, int rotation) {
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
             // The spritesheet contains all 12 piece types in a single row, where each piece type

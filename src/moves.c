@@ -1,7 +1,7 @@
 #include "chess.h"
 
-uint64_t getMoves(unsigned char* board, unsigned char pieceIndex){
-    unsigned char piece = board[pieceIndex];
+uint64_t getMoves(uint8_t* board, uint8_t pieceIndex){
+    uint8_t piece = board[pieceIndex];
     if ((piece & 0b111) == PAWN) {
         return getPawnSquares(board, pieceIndex);
     }
@@ -11,16 +11,16 @@ uint64_t getMoves(unsigned char* board, unsigned char pieceIndex){
     return 0;
 }
 
-uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex){
+uint64_t getPawnSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t pawnSquares = 0;
     char piece = board[pieceIndex];
     char pieceColour = COLOUR(piece);
     char direction = COLOUR_DIRECTION(pieceColour);
-    unsigned char anteriorSquare = ANTERIOR_SQUARE(pieceIndex, direction);
+    uint8_t anteriorSquare = ANTERIOR_SQUARE(pieceIndex, direction);
 
     // Checking if the pawn can take left
     if ((pieceIndex % 8 != 0 && pieceColour == WHITE)  || ((pieceIndex + 1) % 8 != 0 && pieceColour == BLACK)){
-        unsigned char sinistralSquare = SINISTRAL_SQAURE(anteriorSquare, direction);
+        uint8_t sinistralSquare = SINISTRAL_SQAURE(anteriorSquare, direction);
         if(board[sinistralSquare]){
             if(COLOUR(board[sinistralSquare]) != pieceColour)
                 pawnSquares |= (1ULL << sinistralSquare);
@@ -29,7 +29,7 @@ uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex){
 
     // Checking if the pawn can take right
     if ((pieceIndex % 8 != 0 && pieceColour == BLACK)  || ((pieceIndex + 1) % 8 != 0 && pieceColour == WHITE)){
-        unsigned char dextralSquare = DEXTRAL_SQUARE(anteriorSquare, direction);
+        uint8_t dextralSquare = DEXTRAL_SQUARE(anteriorSquare, direction);
         if(board[dextralSquare]){
             if(COLOUR(board[dextralSquare]) != pieceColour)
                 pawnSquares |= (1ULL << dextralSquare);
@@ -50,7 +50,7 @@ uint64_t getPawnSquares(unsigned char* board, unsigned char pieceIndex){
     return pawnSquares;
 }
 
-uint64_t getKingSquares(unsigned char* board, unsigned char pieceIndex){
+uint64_t getKingSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t kingSquares = 0;
     char piece = board[pieceIndex];
     char pieceColour = COLOUR(piece);
@@ -58,8 +58,8 @@ uint64_t getKingSquares(unsigned char* board, unsigned char pieceIndex){
     char rank = GET_RANK(pieceIndex);
     char file = GET_FILE(pieceIndex);
     
-    unsigned char cornerTargetSquare;
-    unsigned char targetSquare;
+    uint8_t cornerTargetSquare;
+    uint8_t targetSquare;
 
     targetSquare = ANTERIOR_SQUARE(pieceIndex, direction);
     if((rank - direction) % 9 != 0){

@@ -1,6 +1,7 @@
-#include "chess.h"
-// Refactor this to use ENUMS
-const unsigned char pieceLookupTable[256] = {
+#include <stdint.h>
+#include "fen.h"
+
+const uint8_t pieceLookupTable[256] = {
     ['p'] = B_PAWN,
     ['n'] = B_KNIGHT,
     ['b'] = B_BISHOP,
@@ -15,16 +16,16 @@ const unsigned char pieceLookupTable[256] = {
     ['K'] = W_KING
 };
 
-unsigned char* fenToArray(char* fen){
-    unsigned char* board = (unsigned char*)malloc(64 * sizeof(unsigned char));
+uint8_t* fenToArray(uint8_t* fen){
+    uint8_t* board = (uint8_t*)malloc(64 * sizeof(uint8_t));
     if (board == NULL) {
-        printf("Memory allocation failed!");
+        printf("malloc error");
         exit(1);
     }
-    memset(board, 0, 64 * sizeof(char));
+    memset(board, 0, 64 * sizeof(uint8_t));
 
     int i = 0;
-    unsigned char fenChar;
+    uint8_t fenChar;
     while((fenChar = *fen) != '\0'){
         if(fenChar >= '1' && fenChar <= '8'){
             i += fenChar - 48;
@@ -37,13 +38,4 @@ unsigned char* fenToArray(char* fen){
     }
 
     return board;
-}
-
-void printBoard(unsigned char *board){
-    for (int i = 0; i < 64; i++) {
-        printf("%i ", board[i]);
-        if ((i + 1) % 8 == 0)
-            printf("\n");
-    }
-    printf("\n");
 }
