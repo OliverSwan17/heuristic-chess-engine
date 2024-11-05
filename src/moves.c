@@ -13,9 +13,9 @@ uint64_t getMoves(uint8_t* board, uint8_t pieceIndex){
 
 uint64_t getPawnSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t pawnSquares = 0;
-    char piece = board[pieceIndex];
-    char pieceColour = COLOUR(piece);
-    char direction = COLOUR_DIRECTION(pieceColour);
+    uint8_t piece = board[pieceIndex];
+    uint8_t pieceColour = COLOUR(piece);
+    uint8_t direction = COLOUR_DIRECTION(pieceColour);
     uint8_t anteriorSquare = ANTERIOR_SQUARE(pieceIndex, direction);
 
     // Checking if the pawn can take left
@@ -52,11 +52,11 @@ uint64_t getPawnSquares(uint8_t* board, uint8_t pieceIndex){
 
 uint64_t getKingSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t kingSquares = 0;
-    char piece = board[pieceIndex];
-    char pieceColour = COLOUR(piece);
-    char direction = COLOUR_DIRECTION(pieceColour);
-    char rank = GET_RANK(pieceIndex);
-    char file = GET_FILE(pieceIndex);
+    uint8_t piece = board[pieceIndex];
+    uint8_t pieceColour = COLOUR(piece);
+    uint8_t direction = COLOUR_DIRECTION(pieceColour);
+    uint8_t rank = GET_RANK(pieceIndex);
+    uint8_t file = GET_FILE(pieceIndex);
     
     uint8_t cornerTargetSquare;
     uint8_t targetSquare;

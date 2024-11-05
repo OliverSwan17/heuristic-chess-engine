@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+uint8_t* fenToArray(char* fen);
+void printBoard(uint8_t *board);
+
 #define B_PAWN 1
 #define B_KNIGHT 2
 #define B_BISHOP 3

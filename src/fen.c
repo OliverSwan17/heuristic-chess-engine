@@ -16,7 +16,7 @@ const uint8_t pieceLookupTable[256] = {
     ['K'] = W_KING
 };
 
-uint8_t* fenToArray(uint8_t* fen){
+uint8_t* fenToArray(char* fen){
     uint8_t* board = (uint8_t*)malloc(64 * sizeof(uint8_t));
     if (board == NULL) {
         printf("malloc error");

@@ -45,9 +45,7 @@
 #define SQUARE_SIZE (SCREEN_LENGTH / 8)
 
 //Fen
-uint8_t* fenToArray(char* fen);
-void printBoard(uint8_t *board);
-extern const uint8_t pieceLookupTable[256];
+extern uint8_t* fenToArray(char* fen);
 
 //Draw
 void initRectangles();
