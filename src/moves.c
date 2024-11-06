@@ -3,15 +3,15 @@
 uint64_t getMoves(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
     if ((piece & 0b111) == PAWN) {
-        return getPawnSquares(board, pieceIndex);
+        return pawnTargetSquares(board, pieceIndex);
     }
     if ((piece & KING) == KING) {
-        return getKingSquares(board, pieceIndex);
+        return kingTargetSquares(board, pieceIndex);
     }
     return 0;
 }
 
-uint64_t getPawnSquares(uint8_t* board, uint8_t pieceIndex){
+uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t pawnSquares = 0;
     uint8_t piece = board[pieceIndex];
     uint8_t pieceColour = COLOUR(piece);
@@ -50,13 +50,13 @@ uint64_t getPawnSquares(uint8_t* board, uint8_t pieceIndex){
     return pawnSquares;
 }
 
-uint64_t getKingSquares(uint8_t* board, uint8_t pieceIndex){
+uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t kingSquares = 0;
     uint64_t piece = board[pieceIndex];
     uint64_t pieceColour = COLOUR(piece);
     char direction = COLOUR_DIRECTION(pieceColour);
-    uint8_t rank = GET_RANK(pieceIndex);
-    uint8_t file = GET_FILE(pieceIndex);
+    uint8_t rank = RANK(pieceIndex);
+    uint8_t file = FILE(pieceIndex);
     
     uint8_t cornerTargetSquare;
     uint8_t targetSquare;

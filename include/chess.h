@@ -18,26 +18,23 @@
 #define QUEEN 5
 #define KING 6
 
+// Misc
 #define MOUSE_TO_SQUARE_INDEX(x, y) (((x) / 100) + ((y) / 100) * 8)
 #define IS_EMPTY(index) !index
+#define COLOUR(piece) ((piece >> 3) & 1)
 
-#define GET_FILE(i) (((i) % 8) + 1)
-#define GET_RANK(i) (abs(((i) + 1 + 8 - 1) / 8 - 9))
-
-
-//Positional Macros
-#define COLOUR(piece) ((piece & (1 << 3)) % 7)
-#define COLOUR_DIRECTION(colour) ((colour) == 0 ? 1 : -1)
+// File and Rank
+#define FILE(i) (((i) % 8) + 1)
+#define RANK(i) (abs(((i) + 1 + 8 - 1) / 8 - 9))
 
 //Directions
 #define ANTERIOR_SQUARE(squareIndex, direction) (squareIndex + direction * 8)
 #define SINISTRAL_SQAURE(squareIndex, direction) (squareIndex + direction)
 #define DEXTRAL_SQUARE(squareIndex, direction) (squareIndex - direction)
 #define POSTERIOR_SQUARE(squareIndex, direction) (squareIndex - direction * 8)
-
-//Orientation 
 #define WHITE_DIRECTION (-1)
 #define BLACK_DIRECTION (1)
+#define COLOUR_DIRECTION(colour) ((colour) == 0 ? 1 : -1)
 
 //Screen Constants
 #define SCREEN_LENGTH (800)
@@ -56,5 +53,5 @@ void drawHighlightedSquares(uint64_t squares, SDL_Renderer* renderer);
 
 //Moves
 uint64_t getMoves(uint8_t* board, uint8_t pieceIndex);
-uint64_t getPawnSquares(uint8_t* board, uint8_t pieceIndex);
-uint64_t getKingSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex);
