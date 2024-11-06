@@ -37,7 +37,9 @@ There is a macro defined in `chess.h` which is used to calculate the colour of a
 ## Board Representation
 ### The Board Data Structure
 The board is simply represented by an array of 64 `uint8_t`. With each value byte representing a piece. The following images show the indicies of the pieces and the initial board state.
+
 ![Alt text](board_indices.png)
+
 ![Alt text](board.png)
 
 The board is initialised in `main.c`:
@@ -80,6 +82,7 @@ SDL2 uses a left-handed coordinate system, meaning that (0, 0) refers to the pix
 
 ### Sprites
 The piece images are shown in the following sprite sheet under the `assets/pieces` directory.
+
 ![Alt text](../assets/pieces/pieces.png)
 
 Each piece is 20x20 pixels. Most of the UI functionality is defined in `draw.c`. The main data structures for drawing the board and pieces are:
