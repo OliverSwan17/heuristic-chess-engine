@@ -1,13 +1,13 @@
 #include "chess.h"
 
-uint64_t getMoves(uint8_t* board, uint8_t pieceIndex){
+uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
-    if ((piece & 0b111) == PAWN) {
+    if ((piece & PAWN) == PAWN)
         return pawnTargetSquares(board, pieceIndex);
-    }
-    if ((piece & KING) == KING) {
+    if ((piece & KING) == KING)
         return kingTargetSquares(board, pieceIndex);
-    }
+    if ((piece & KNIGHT) == KNIGHT)
+        return knightTargetSquares(board, pieceIndex);
     return 0;
 }
 
@@ -18,7 +18,6 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
     char direction = COLOUR_DIRECTION(pieceColour);
     uint8_t anteriorSquare = ANTERIOR_SQUARE(pieceIndex, direction);
 
-    // Checking if the pawn can take left
     if ((pieceIndex % 8 != 0 && pieceColour == WHITE)  || ((pieceIndex + 1) % 8 != 0 && pieceColour == BLACK)){
         uint8_t sinistralSquare = SINISTRAL_SQAURE(anteriorSquare, direction);
         if(board[sinistralSquare]){
@@ -27,7 +26,6 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
         }
     }
 
-    // Checking if the pawn can take right
     if ((pieceIndex % 8 != 0 && pieceColour == BLACK)  || ((pieceIndex + 1) % 8 != 0 && pieceColour == WHITE)){
         uint8_t dextralSquare = DEXTRAL_SQUARE(anteriorSquare, direction);
         if(board[dextralSquare]){
@@ -36,7 +34,6 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
         }
     }
 
-    // Checking forward moves
     if (IS_EMPTY(board[anteriorSquare])){
         pawnSquares |= (1ULL << anteriorSquare);
         anteriorSquare = ANTERIOR_SQUARE(anteriorSquare, direction);
@@ -94,4 +91,69 @@ uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex){
         kingSquares |= (1ULL << targetSquare);
 
     return kingSquares;
+}
+
+uint64_t knightMovesTable[64];
+void generateKnightLookupTable(){
+    uint64_t* knightMoveTable = malloc(sizeof(uint64_t) * 64);
+    memset(knightMoveTable, 0, sizeof(uint64_t) * 64);
+
+    uint64_t squares = 0;
+    uint8_t rank = 0;
+    uint8_t file = 0;
+
+    for (int i = 0; i < 64; i++){
+        squares = 0;
+        rank = RANK(i);
+        file = FILE(i);
+        
+        if (rank <= 6){
+            if (file != 1)
+                squares |= (1ULL << (i - 17));
+            if (file != 8)
+                squares |= (1ULL << (i - 15));
+        }
+
+        if (rank >= 3){
+            if (file != 1)
+                squares |= (1ULL << (i + 15));
+            if (file != 8)
+                squares |= (1ULL << (i + 17));
+        }
+
+        if (file <= 6){
+            if (rank <= 7)
+                squares |= (1ULL << (i - 6));
+
+            if (rank >= 2)
+                squares |= (1ULL << (i + 10));
+        }
+
+        if (file >= 3){
+            if (rank <= 7)
+                squares |= (1ULL << (i - 10));
+
+            if (rank >= 2)
+                squares |= (1ULL << (i + 6));
+        }
+
+        knightMovesTable[i] = squares;
+    }
+}
+
+uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex){
+    uint64_t knightMoves = 0;
+    uint64_t piece = board[pieceIndex];
+    uint64_t pieceColour = COLOUR(piece);
+
+    memcpy(&knightMoves, &knightMovesTable[pieceIndex], sizeof(uint64_t));
+
+    for(int i = 0; i < 64; i++){
+        if((knightMoves >> i) & 1){
+            if((board[i] != EMPTY) && (pieceColour == COLOUR(board[i])))
+                knightMoves &= ~(1ULL << i);
+        }
+    }
+
+    return knightMoves;
 }

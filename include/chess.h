@@ -22,6 +22,7 @@
 #define MOUSE_TO_SQUARE_INDEX(x, y) (((x) / 100) + ((y) / 100) * 8)
 #define IS_EMPTY(index) !index
 #define COLOUR(piece) ((piece >> 3) & 1)
+#define IN_BOUNDS(x) ((x) >= 0 && (x) < 64)
 
 // File and Rank
 #define FILE(i) (((i) % 8) + 1)
@@ -52,6 +53,10 @@ void initPiecesTexture(SDL_Renderer* renderer);
 void drawHighlightedSquares(uint64_t squares, SDL_Renderer* renderer);
 
 //Moves
-uint64_t getMoves(uint8_t* board, uint8_t pieceIndex);
+uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex);
+
+//Lookup Tables
+void generateKnightLookupTable();

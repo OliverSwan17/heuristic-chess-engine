@@ -3,7 +3,8 @@
 int main(int argc, char* argv[]) {
     //uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     //uint8_t* board = fenToArray("2P1PP2/p1Pp3p/2p1P1PP/3P1p1p/Pp6/p1P4P/PP1ppPP1/8");
-    uint8_t* board = fenToArray("8/1K6/3KkKk1/2k1kK2/1k2KKk1/1KK1kk1K/1k1K1K2/Kk5k");
+    generateKnightLookupTable();
+    uint8_t* board = fenToArray("NNNNNNNN/nnnnnnnn/NNNNNNNN/NNNNnnNN/NNNNnnnN/NNNNNNNN/NNNNnnnn/NNNNNNNN");
     uint64_t highlightedSquares = 0;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
                 case SDL_MOUSEBUTTONDOWN:
                     if(e.button.button == SDL_BUTTON_LEFT) {
                         uint8_t squareSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                        highlightedSquares = getMoves(board, squareSelectionIndex);
+                        highlightedSquares = getTargetSquares(board, squareSelectionIndex);
                     }
                     break;
             }
