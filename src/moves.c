@@ -8,6 +8,8 @@ uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
         return kingTargetSquares(board, pieceIndex);
     if ((piece & KNIGHT) == KNIGHT)
         return knightTargetSquares(board, pieceIndex);
+    if ((piece & ROOK) == ROOK)
+        return rookTargetSquares(board, pieceIndex);
     return 0;
 }
 
@@ -49,7 +51,7 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
 
 uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t kingSquares = 0;
-    uint64_t piece = board[pieceIndex];
+    uint8_t piece = board[pieceIndex];
     uint64_t pieceColour = COLOUR(piece);
     char direction = COLOUR_DIRECTION(pieceColour);
     uint8_t rank = RANK(pieceIndex);
@@ -153,4 +155,62 @@ uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex){
     }
 
     return knightMoves;
+}
+
+uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex){
+    uint64_t rookSquares = 0;
+    uint8_t piece = board[pieceIndex];
+    uint64_t pieceColour = COLOUR(piece);
+    uint8_t rank = RANK(pieceIndex);
+    uint8_t file = FILE(pieceIndex);
+    
+    uint8_t targetSquare = pieceIndex; 
+    for(int i = 1; i < file; i++){
+        targetSquare--;
+        if(board[targetSquare] == EMPTY)
+            rookSquares |= (1ULL << targetSquare);
+        else {
+            if (COLOUR(board[targetSquare]) != pieceColour)
+                rookSquares |= (1ULL << targetSquare);
+            break;
+        }
+    }
+
+    targetSquare = pieceIndex;
+    for(int i = 8; i > file; i--){
+        targetSquare++;
+        if(board[targetSquare] == EMPTY)
+            rookSquares |= (1ULL << targetSquare);
+        else {
+            if (COLOUR(board[targetSquare]) != pieceColour)
+                rookSquares |= (1ULL << targetSquare);
+            break;
+        }
+    }
+
+    targetSquare = pieceIndex;
+    for(int i = 1; i < rank; i++){
+        targetSquare += 8;
+        if(board[targetSquare] == EMPTY)
+            rookSquares |= (1ULL << targetSquare);
+        else {
+            if (COLOUR(board[targetSquare]) != pieceColour)
+                rookSquares |= (1ULL << targetSquare);
+            break;
+        }
+    }
+
+    targetSquare = pieceIndex;
+    for(int i = 8; i > rank; i--){
+        targetSquare -= 8;
+        if(board[targetSquare] == EMPTY)
+            rookSquares |= (1ULL << targetSquare);
+        else {
+            if (COLOUR(board[targetSquare]) != pieceColour)
+                rookSquares |= (1ULL << targetSquare);
+            break;
+        }
+    }
+
+    return rookSquares;
 }

@@ -57,6 +57,7 @@ uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex);
 
 //Lookup Tables
 void generateKnightLookupTable();

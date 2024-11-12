@@ -4,7 +4,7 @@ int main(int argc, char* argv[]) {
     //uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     //uint8_t* board = fenToArray("2P1PP2/p1Pp3p/2p1P1PP/3P1p1p/Pp6/p1P4P/PP1ppPP1/8");
     generateKnightLookupTable();
-    uint8_t* board = fenToArray("NNNNNNNN/nnnnnnnn/NNNNNNNN/NNNNnnNN/NNNNnnnN/NNNNNNNN/NNNNnnnn/NNNNNNNN");
+    uint8_t* board = fenToArray("RRRRRRRR/r4r2/R4r2/r7/8/8/8/4r3");
     uint64_t highlightedSquares = 0;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
