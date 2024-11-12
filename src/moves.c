@@ -93,11 +93,8 @@ uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex){
     return kingSquares;
 }
 
-uint64_t knightMovesTable[64];
+uint64_t knightMoveTable[64];
 void generateKnightLookupTable(){
-    uint64_t* knightMoveTable = malloc(sizeof(uint64_t) * 64);
-    memset(knightMoveTable, 0, sizeof(uint64_t) * 64);
-
     uint64_t squares = 0;
     uint8_t rank = 0;
     uint8_t file = 0;
@@ -137,7 +134,7 @@ void generateKnightLookupTable(){
                 squares |= (1ULL << (i + 6));
         }
 
-        knightMovesTable[i] = squares;
+        knightMoveTable[i] = squares;
     }
 }
 
@@ -146,7 +143,7 @@ uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t piece = board[pieceIndex];
     uint64_t pieceColour = COLOUR(piece);
 
-    memcpy(&knightMoves, &knightMovesTable[pieceIndex], sizeof(uint64_t));
+    memcpy(&knightMoves, &knightMoveTable[pieceIndex], sizeof(uint64_t));
 
     for(int i = 0; i < 64; i++){
         if((knightMoves >> i) & 1){
