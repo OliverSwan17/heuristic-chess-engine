@@ -12,6 +12,8 @@ uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
         return bishopTargetSquares(board, pieceIndex);
     if ((piece & 0b111) == ROOK)
         return rookTargetSquares(board, pieceIndex);
+    if ((piece & 0b111) == QUEEN)
+        return bishopTargetSquares(board, pieceIndex) | rookTargetSquares(board, pieceIndex);
     return 0;
 }
 
@@ -223,7 +225,7 @@ uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex) {
     uint8_t pieceColour = COLOUR(piece);
 
     uint8_t targetSquare = pieceIndex;
-    if(FILE(pieceIndex) != 1 && RANK(pieceIndex) != 8){
+    if(FILE(pieceIndex) != 8 && RANK(pieceIndex) != 8){
         while (1)
         {
             targetSquare -= 7;
@@ -240,7 +242,7 @@ uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex) {
     }
 
     targetSquare = pieceIndex;
-    if(FILE(pieceIndex) != 8 && RANK(pieceIndex) != 1){
+    if(FILE(pieceIndex) != 1 && RANK(pieceIndex) != 1){
         while (1)
         {
             targetSquare += 7;
@@ -292,4 +294,3 @@ uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex) {
 
     return bishopSquares;
 }
-
