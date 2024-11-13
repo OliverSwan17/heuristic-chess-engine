@@ -2,13 +2,15 @@
 
 uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
-    if ((piece & PAWN) == PAWN)
+    if ((piece & 0b111) == PAWN)
         return pawnTargetSquares(board, pieceIndex);
-    if ((piece & KING) == KING)
+    if ((piece & 0b111) == KING)
         return kingTargetSquares(board, pieceIndex);
-    if ((piece & KNIGHT) == KNIGHT)
+    if ((piece & 0b111) == KNIGHT)
         return knightTargetSquares(board, pieceIndex);
-    if ((piece & ROOK) == ROOK)
+    if ((piece & 0b111) == BISHOP)
+        return bishopTargetSquares(board, pieceIndex);
+    if ((piece & 0b111) == ROOK)
         return rookTargetSquares(board, pieceIndex);
     return 0;
 }
@@ -17,7 +19,7 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t pawnSquares = 0;
     uint8_t piece = board[pieceIndex];
     uint8_t pieceColour = COLOUR(piece);
-    char direction = COLOUR_DIRECTION(pieceColour);
+    int8_t direction = COLOUR_DIRECTION(pieceColour);
     uint8_t anteriorSquare = ANTERIOR_SQUARE(pieceIndex, direction);
 
     if ((pieceIndex % 8 != 0 && pieceColour == WHITE)  || ((pieceIndex + 1) % 8 != 0 && pieceColour == BLACK)){
@@ -52,8 +54,8 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
 uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t kingSquares = 0;
     uint8_t piece = board[pieceIndex];
-    uint64_t pieceColour = COLOUR(piece);
-    char direction = COLOUR_DIRECTION(pieceColour);
+    uint8_t pieceColour = COLOUR(piece);
+    int8_t direction = COLOUR_DIRECTION(pieceColour);
     uint8_t rank = RANK(pieceIndex);
     uint8_t file = FILE(pieceIndex);
     
@@ -142,8 +144,8 @@ void generateKnightLookupTable(){
 
 uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t knightMoves = 0;
-    uint64_t piece = board[pieceIndex];
-    uint64_t pieceColour = COLOUR(piece);
+    uint8_t piece = board[pieceIndex];
+    uint8_t pieceColour = COLOUR(piece);
 
     memcpy(&knightMoves, &knightMoveTable[pieceIndex], sizeof(uint64_t));
 
@@ -160,7 +162,7 @@ uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex){
 uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint64_t rookSquares = 0;
     uint8_t piece = board[pieceIndex];
-    uint64_t pieceColour = COLOUR(piece);
+    uint8_t pieceColour = COLOUR(piece);
     uint8_t rank = RANK(pieceIndex);
     uint8_t file = FILE(pieceIndex);
     
@@ -214,3 +216,80 @@ uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex){
 
     return rookSquares;
 }
+
+uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex) {
+    uint64_t bishopSquares = 0;
+    uint8_t piece = board[pieceIndex];
+    uint8_t pieceColour = COLOUR(piece);
+
+    uint8_t targetSquare = pieceIndex;
+    if(FILE(pieceIndex) != 1 && RANK(pieceIndex) != 8){
+        while (1)
+        {
+            targetSquare -= 7;
+            if(board[targetSquare] == EMPTY)
+                bishopSquares |= (1ULL << targetSquare);
+            else {
+                if (COLOUR(board[targetSquare]) != pieceColour)
+                    bishopSquares |= (1ULL << targetSquare);
+                break;
+            }
+            if(FILE(targetSquare) == 1 || RANK(targetSquare) == 8 || FILE(targetSquare) == 8 || RANK(targetSquare) == 1)
+                break;
+        }
+    }
+
+    targetSquare = pieceIndex;
+    if(FILE(pieceIndex) != 8 && RANK(pieceIndex) != 1){
+        while (1)
+        {
+            targetSquare += 7;
+            if(board[targetSquare] == EMPTY)
+                bishopSquares |= (1ULL << targetSquare);
+            else {
+                if (COLOUR(board[targetSquare]) != pieceColour)
+                    bishopSquares |= (1ULL << targetSquare);
+                break;
+            }
+            if(FILE(targetSquare) == 1 || RANK(targetSquare) == 8 || FILE(targetSquare) == 8 || RANK(targetSquare) == 1)
+                break;
+        }
+    }
+
+    targetSquare = pieceIndex;
+    if(FILE(pieceIndex) != 8 && RANK(pieceIndex) != 1){
+        while (1)
+        {
+            targetSquare += 9;
+            if(board[targetSquare] == EMPTY)
+                bishopSquares |= (1ULL << targetSquare);
+            else {
+                if (COLOUR(board[targetSquare]) != pieceColour)
+                    bishopSquares |= (1ULL << targetSquare);
+                break;
+            }
+            if(FILE(targetSquare) == 1 || RANK(targetSquare) == 8 || FILE(targetSquare) == 8 || RANK(targetSquare) == 1)
+                break;
+        }
+    }
+
+    targetSquare = pieceIndex;
+    if(FILE(pieceIndex) != 1 && RANK(pieceIndex) != 8){
+        while (1)
+        {
+            targetSquare -= 9;
+            if(board[targetSquare] == EMPTY)
+                bishopSquares |= (1ULL << targetSquare);
+            else {
+                if (COLOUR(board[targetSquare]) != pieceColour)
+                    bishopSquares |= (1ULL << targetSquare);
+                break;
+            }
+            if(FILE(targetSquare) == 1 || RANK(targetSquare) == 8 || FILE(targetSquare) == 8 || RANK(targetSquare) == 1)
+                break;
+        }
+    }
+
+    return bishopSquares;
+}
+
