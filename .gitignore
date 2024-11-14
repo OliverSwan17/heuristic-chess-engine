@@ -1,5 +1,6 @@
 .vscode/
 chess.exe
+chess
 obj/*
 !obj/.gitkeep
 venv/
