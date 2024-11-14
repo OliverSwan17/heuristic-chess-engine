@@ -1,0 +1,165 @@
+<h1 id="codebase-primer">Codebase Primer</h1>
+<p>The intention of this documentation is provide an overview of how the
+codebase is layed out and operates. Reading this should provide you with
+a general feel on how the engine operates.</p>
+<p>The codebase has a simple layout wherein source files are in the
+<code>src</code> directory, header files in <code>include</code>, and
+object files in <code>obj</code>. The repository makes use of various
+branches. The <code>staging</code> branch is used for changes that are
+still being tested before they are deemed fit to be merged with
+main.</p>
+<p>As the project progresses branches will be created for different
+iterations of the engine. The first of these branches will simply be an
+AI which produces moves randomly. With each subsequent major iteration
+having its own branch that will remain unchanged.</p>
+<p>This use of branches will make it easy for benchmarking and comparing
+the performance of different iterations against each other.</p>
+<h2 id="piece-representation">Piece Representation</h2>
+<p>The pieces are represented using a <code>uint8_t</code>. Bits zero
+through three represent the piece type. |Value | Piece| |—–|——-|
+<code>000</code> | Empty <code>001</code> | Pawn <code>010</code> |
+Knight <code>011</code> | Bishop <code>100</code> | Rook
+<code>101</code> | Queen <code>110</code> | King <code>111</code> |
+Undefined</p>
+<p>The fourth bit indicates the piece colour. |Value|Colour| |—–|——|
+|<code>0XXX</code>|Black| |<code>1XXX</code>|White|</p>
+<p>The remaining four bits could potentially be used to indicate if
+en-passant is available and if the king has moved, the rook has moved
+etc.</p>
+<p>There is a macro defined in <code>chess.h</code> which is used to
+calculate the colour of a piece. If positive, the piece is white and if
+zero the piece is black. This is calculated through simply checking if
+the fourth bit is set using a bitmask.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COLOUR</span><span class="op">(</span><span class="pp">piece</span><span class="op">)</span><span class="pp"> </span><span class="op">((</span><span class="pp">piece </span><span class="op">&gt;&gt;</span><span class="pp"> </span><span class="dv">3</span><span class="op">)</span><span class="pp"> </span><span class="op">&amp;</span><span class="pp"> </span><span class="dv">1</span><span class="op">)</span></span></code></pre></div>
+<h2 id="board-representation">Board Representation</h2>
+<h3 id="the-board-data-structure">The Board Data Structure</h3>
+<p>The board is simply represented by an array of 64
+<code>uint8_t</code>. With each value byte representing a piece. The
+following images show the indicies of the pieces and the initial board
+state.</p>
+<figure>
+<img src="board_indices.png" alt="Alt text" />
+<figcaption aria-hidden="true">Alt text</figcaption>
+</figure>
+<figure>
+<img src="board.png" alt="Alt text" />
+<figcaption aria-hidden="true">Alt text</figcaption>
+</figure>
+<p>The board is initialised in <code>main.c</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span><span class="op">*</span> board <span class="op">=</span> fenToArray<span class="op">(</span><span class="st">&quot;rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR&quot;</span><span class="op">);</span></span></code></pre></div>
+<p>The board is allocated memory on the heap from the following call to
+malloc in the <code>fenToArray</code> function:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span><span class="op">*</span> board <span class="op">=</span> <span class="op">(</span><span class="dt">uint8_t</span><span class="op">*)</span>malloc<span class="op">(</span><span class="dv">64</span> <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">uint8_t</span><span class="op">));</span></span></code></pre></div>
+<h3 id="piece-orientation-and-directions">Piece Orientation and
+Directions</h3>
+<p>Piece orientation is important for pawn moves as black pawns will
+move in the positive direction and white pawns will move in the negative
+direction. Therefore, the codebase makes use of directions relative to
+the colour of the pawn. Anterior is forward, posterior is backwards,
+dextral is right and sinistral is left. The directions are shown below
+and defined in <code>chess.h</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ANTERIOR_SQUARE</span><span class="op">(</span><span class="pp">squareIndex</span><span class="op">,</span><span class="pp"> direction</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">squareIndex </span><span class="op">+</span><span class="pp"> direction </span><span class="op">*</span><span class="pp"> </span><span class="dv">8</span><span class="op">)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SINISTRAL_SQAURE</span><span class="op">(</span><span class="pp">squareIndex</span><span class="op">,</span><span class="pp"> direction</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">squareIndex </span><span class="op">+</span><span class="pp"> direction</span><span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DEXTRAL_SQUARE</span><span class="op">(</span><span class="pp">squareIndex</span><span class="op">,</span><span class="pp"> direction</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">squareIndex </span><span class="op">-</span><span class="pp"> direction</span><span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define POSTERIOR_SQUARE</span><span class="op">(</span><span class="pp">squareIndex</span><span class="op">,</span><span class="pp"> direction</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">squareIndex </span><span class="op">-</span><span class="pp"> direction </span><span class="op">*</span><span class="pp"> </span><span class="dv">8</span><span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WHITE_DIRECTION </span><span class="op">(-</span><span class="dv">1</span><span class="op">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BLACK_DIRECTION </span><span class="op">(</span><span class="dv">1</span><span class="op">)</span></span></code></pre></div>
+<p>Macros are employed to calculate these positions given an index and
+direction. With the direction being either 1 for the black facing
+direction or -1 for the white facing direction.</p>
+<h3 id="files-and-ranks">Files and Ranks</h3>
+<p>The files run vertically and the ranks run horizontally. There are
+some macros defined in <code>chess.h</code> that calculate the rank and
+file given an index. These macros are shown below:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FILE</span><span class="op">(</span><span class="pp">i</span><span class="op">)</span><span class="pp"> </span><span class="op">(((</span><span class="pp">i</span><span class="op">)</span><span class="pp"> </span><span class="op">%</span><span class="pp"> </span><span class="dv">8</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="dv">1</span><span class="op">)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RANK</span><span class="op">(</span><span class="pp">i</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">abs</span><span class="op">(((</span><span class="pp">i</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="dv">1</span><span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="dv">8</span><span class="pp"> </span><span class="op">-</span><span class="pp"> </span><span class="dv">1</span><span class="op">)</span><span class="pp"> </span><span class="op">/</span><span class="pp"> </span><span class="dv">8</span><span class="pp"> </span><span class="op">-</span><span class="pp"> </span><span class="dv">9</span><span class="op">))</span></span></code></pre></div>
+<p>Understanding these calculations is made much easier when referring
+to the <code>board_indices.png</code> image. The A file is represented
+by 1 and the first rank is represented by 1 also. Then it is easy to see
+why the calculation for the file is simply the index modulo 8, plus
+1.</p>
+<p>The calculation for rank is a bit more tricky. I forgot how I came up
+with it but I’m sure you can figure it out by looking at it.</p>
+<h2 id="graphics">Graphics</h2>
+<p>The graphics for this program is driven by SDL2. Documentation for
+this library can be found here: https://www.libsdl.org/.</p>
+<p>SDL2 uses a left-handed coordinate system, meaning that (0, 0) refers
+to the pixel at the top-left corner of the screen. Moving to (1, 0)
+places you one pixel to the right, while (0, 1) moves you one pixel
+down.</p>
+<h3 id="sprites">Sprites</h3>
+<p>The piece images are shown in the following sprite sheet under the
+<code>assets/pieces</code> directory.</p>
+<figure>
+<img src="../assets/pieces/pieces.png" alt="Alt text" />
+<figcaption aria-hidden="true">Alt text</figcaption>
+</figure>
+<p>Each piece is 20x20 pixels. Most of the UI functionality is defined
+in <code>draw.c</code>. The main data structures for drawing the board
+and pieces are:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>SDL_Rect<span class="op">*</span> squaresRects<span class="op">[</span><span class="dv">64</span><span class="op">];</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>SDL_Rect<span class="op">*</span> piecesRects<span class="op">[</span><span class="dv">12</span><span class="op">];</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>SDL_Texture<span class="op">*</span> piecesTexture<span class="op">;</span></span></code></pre></div>
+<p>The <code>SDL_Rect</code> struct defines a rectangular area in which
+sprites are printed to the screen. Therefore, we define 64 rects; one
+for each square. We also define 12 rects; one for each piece/colour
+combination. These 12 rects will be assigned to each piece in the
+spritesheet within <code>piecesRects</code>. This will allow us to use
+these rects as a source to copy from with the destination being defined
+in <code>squaresRects</code>.</p>
+<p>The drawing is enabled through calling various SDL2 functions which
+is fairly simple.</p>
+<h3 id="the-screen">The Screen</h3>
+<p>The screen is simply just the board in a 800x800 pixel window. This
+means that each piece is upscaled from 20x20 pixels by 5 to 100x100
+pixels.</p>
+<h2 id="forsythedwards-notation-fen">Forsyth–Edwards Notation (FEN)</h2>
+<p>This notation is used to describe the state of the board and castling
+availability as well as a possible En passant target square. The half
+move, full move count as well as the active colour is also described.
+More can be read about FEN here:
+https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation.</p>
+<p>The initial state of the board is given by the following FEN string:
+<code>rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1</code></p>
+<p>As you can see, each integer simply represents a run of empty
+squares. White pieces are denoted using uppercase and black pieces
+lowercase.</p>
+<p><code>uint8_t* fenToArray(char* fen)</code> within <code>fen.c</code>
+takes a FEN string, allocates 64 bytes of memory on the heap, fills
+allocation with the required piece values, and returns a pointer to
+it.</p>
+<h2 id="move-generation">Move Generation</h2>
+<p>The move generation functionality is implemented in moves.c. To
+generate moves for a given piece, the naive approach is to first
+calculate all potential target squares for that piece. Next, we simulate
+the move and calculate the target squares of all opposing pieces. If the
+opposing pieces can attack the king in this scenario, the move is marked
+as illegal and removed from the list of target squares. By repeating
+this process for all target squares, we obtain the final set of legal
+moves for that piece.</p>
+<p>This approach is rather inefficient and is subject to change.
+However, it is important in such a project that we do not prematurely
+optimise everything. It is more important that we first get the program
+functional and then perform iterations over time.</p>
+<p>The move generation is handled by the
+<code>uint64_t getMoves(uint8_t* board, uint8_t pieceIndex)</code>
+function in <code>moves.c</code>. This function will call a helper
+function that is associated with each piece type to generate the moves.
+For example, the call getMoves(board, 25) will lookup the piece at the
+25th index in board and if it is a pawn, will then call
+<code>pawnTargetSquares</code>.</p>
+<p>It should be noted that some of the move generation code is rather
+cryptic. However, if you go through it and constantly refer to the board
+indices image, things become more clear.</p>
+<h3 id="target-squares">Target Squares</h3>
+<p>A piece’s “target squares” are all the squares it can attack,
+excluding those occupied by pieces of the same color. These target
+squares are represented using a <code>uint64_t</code>, a 64-bit unsigned
+integer. This is ideal because each bit in the integer corresponds to a
+specific square on the board, indicating whether it is under attack.
+This representation also allows easy calculation of all squares attacked
+by a player’s pieces by combining individual target squares with bitwise
+OR operations.</p>
+<p>The <code>getMoves</code> function will simply return by value an
+<code>uint64_t</code> which represents a given pieces target
+squares.</p>
