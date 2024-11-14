@@ -4,7 +4,13 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
-#include <SDL2/SDL_image.h>
+
+#ifdef _WIN32
+    #include <SDL2/SDL_image.h>  // For Windows (MinGW/MSYS2)
+#else
+    #include <SDL_image.h>        // For Linux
+#endif
+
 
 //Piece Constants
 #define EMPTY 0
