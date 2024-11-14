@@ -1,19 +1,64 @@
 #include "chess.h"
 
+uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour){
+    uint64_t targetSquares = 0;
+    for(int i = 0; i < 64; i++){
+        if(COLOUR(board[i]) == colour)
+            targetSquares |= getTargetSquares(board, i);
+    }
+    return targetSquares;
+}
+
+uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex){
+    uint8_t piece = board[pieceIndex];
+    uint8_t pieceColour = COLOUR(piece);
+    uint8_t oppositeColour = !COLOUR(piece);
+
+    uint64_t targetSquares = getTargetSquares(board, pieceIndex);
+    uint64_t oppositeColourTargetSquares = 0;
+    uint8_t kingSquare = 0;
+
+    uint8_t* tempBoard = malloc(64 * sizeof(uint8_t));
+
+    for (int i = 0; i < 64; i++){
+        if((board[i] & 0b111) == KING){
+            kingSquare = i;
+            break;
+        }
+    }
+
+    for (int i = 0; i < 64; i++){
+        // Checking if the target square exists at index i
+        if(targetSquares & (1 << i)){
+            memcpy(tempBoard, board, 64);
+            tempBoard[pieceIndex] = EMPTY; // Removing the piece
+            tempBoard[i] = piece; // Making the move
+
+            oppositeColourTargetSquares = getColourTargetSquares(tempBoard, oppositeColour);
+            if(oppositeColourTargetSquares & (1 << kingSquare))
+
+        }
+    }
+}
+
 uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
+    uint64_t targetSquares = 0;
     if ((piece & 0b111) == PAWN)
-        return pawnTargetSquares(board, pieceIndex);
-    if ((piece & 0b111) == KING)
-        return kingTargetSquares(board, pieceIndex);
+        targetSquares = pawnTargetSquares(board, pieceIndex);
+    else if ((piece & 0b111) == KING)
+        targetSquares = kingTargetSquares(board, pieceIndex);
     if ((piece & 0b111) == KNIGHT)
-        return knightTargetSquares(board, pieceIndex);
+        targetSquares = knightTargetSquares(board, pieceIndex);
     if ((piece & 0b111) == BISHOP)
-        return bishopTargetSquares(board, pieceIndex);
+        targetSquares = bishopTargetSquares(board, pieceIndex);
     if ((piece & 0b111) == ROOK)
-        return rookTargetSquares(board, pieceIndex);
+        targetSquares = rookTargetSquares(board, pieceIndex);
     if ((piece & 0b111) == QUEEN)
-        return bishopTargetSquares(board, pieceIndex) | rookTargetSquares(board, pieceIndex);
+        targetSquares = bishopTargetSquares(board, pieceIndex) | rookTargetSquares(board, pieceIndex);
+
+
+    
     return 0;
 }
 

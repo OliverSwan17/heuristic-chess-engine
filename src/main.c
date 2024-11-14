@@ -3,7 +3,7 @@
 int main(int argc, char* argv[]) {
     generateKnightLookupTable();
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    uint64_t highlightedSquares = 0;
+    uint64_t highlightedSquares = getColourTargetSquares(board, WHITE);
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);

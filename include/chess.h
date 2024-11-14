@@ -59,6 +59,8 @@ uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex);
+uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour);
 
 //Lookup Tables
 void generateKnightLookupTable();
