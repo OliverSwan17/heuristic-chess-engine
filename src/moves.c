@@ -192,6 +192,21 @@ uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex){
         }
     }
 
+    // Thie pattern could be better
+    /*
+    targetSquare = pieceIndex;
+    for(int i = 8; i > file; i--){
+        targetSquare++;
+        if(board[targetSquare] == EMPTY){
+            rookSquares |= (1ULL << targetSquare);
+            continue;
+        }
+        if (COLOUR(board[targetSquare]) != pieceColour)
+            rookSquares |= (1ULL << targetSquare);
+        break;
+    }
+    */
+
     targetSquare = pieceIndex;
     for(int i = 1; i < rank; i++){
         targetSquare += 8;
