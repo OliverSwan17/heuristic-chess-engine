@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[]) {
     generateKnightLookupTable();
-    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    uint8_t* board = fenToArray("rnb1k2r/ppp2ppp/4p3/3p4/3P2n1/2N2N2/PPP1PqPP/R1BQKB1R");
     uint64_t highlightedSquares = getColourTargetSquares(board, WHITE);
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
                 case SDL_MOUSEBUTTONDOWN:
                     if(e.button.button == SDL_BUTTON_LEFT) {
                         uint8_t squareSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                        highlightedSquares = getTargetSquares(board, squareSelectionIndex);
+                        highlightedSquares = getLegalMoves(board, squareSelectionIndex);
                     }
                     break;
             }
