@@ -13,8 +13,62 @@ uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
     if ((piece & 0b111) == ROOK)
         return rookTargetSquares(board, pieceIndex);
     if ((piece & 0b111) == QUEEN)
-        return bishopTargetSquares(board, pieceIndex) | rookTargetSquares(board, pieceIndex);
+        return (bishopTargetSquares(board, pieceIndex) | rookTargetSquares(board, pieceIndex));
     return 0;
+}
+
+uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour){
+    uint64_t targetSquares = 0;
+    uint8_t piece = 0;
+    for(int i = 0; i < 64; i++){
+        piece = board[i];
+        if(COLOUR(piece) == colour){
+            targetSquares = (targetSquares | getTargetSquares(board, i));
+        }
+    }
+
+    return targetSquares;
+}
+
+uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex){
+    uint8_t piece = board[pieceIndex];
+    uint8_t pieceColour = COLOUR(piece);
+    uint8_t oppositeColour = (pieceColour == 0) ? 1 : 0;
+    uint64_t kingSquare = 0;
+
+    uint64_t legalSquares = 0;
+    uint64_t targetSquares = 0;
+    uint64_t oppositeColourTargetSquares = 0;
+
+    for (int i = 0; i < 64; i++){
+        if(((board[i] & 0b111) == KING) && COLOUR(board[i]) == pieceColour){
+            kingSquare = i;
+            break;
+        }
+    }
+
+    targetSquares = getTargetSquares(board, pieceIndex);
+    uint8_t tempBoard[64];
+
+    for (int i = 0; i < 64; i++){
+        if(targetSquares & (1ULL << i)){
+            memcpy(tempBoard, board, 64);
+            tempBoard[pieceIndex] = EMPTY;
+            tempBoard[i] = piece;
+            
+            if((piece & 0b111) == KING){
+                kingSquare = i;
+            }
+
+            oppositeColourTargetSquares = getColourTargetSquares(tempBoard, oppositeColour);
+
+            if(!((oppositeColourTargetSquares >> kingSquare) & 1)){
+                legalSquares |= (1ULL << i);
+            }
+        }
+    }
+
+    return legalSquares;
 }
 
 uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){

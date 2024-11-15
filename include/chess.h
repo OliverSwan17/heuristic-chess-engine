@@ -57,6 +57,8 @@ void drawSquares(SDL_Renderer* renderer);
 void drawPieces(SDL_Renderer* renderer, uint8_t* board, int rotation);
 void initPiecesTexture(SDL_Renderer* renderer);
 void drawHighlightedSquares(uint64_t squares, SDL_Renderer* renderer);
+void initSelector(SDL_Renderer* renderer);
+void drawSelector(SDL_Renderer* renderer, uint8_t index, uint8_t state);
 
 //Moves
 uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex);
@@ -65,6 +67,8 @@ uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex);
+uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour);
 
 //Lookup Tables
 void generateKnightLookupTable();

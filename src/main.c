@@ -4,6 +4,9 @@ int main(int argc, char* argv[]) {
     generateKnightLookupTable();
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     uint64_t highlightedSquares = 0;
+    uint8_t srcSelectionIndex = 0;
+    uint8_t selectorSelectionIndex = 0;
+    uint8_t selectorState = 0;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -13,6 +16,7 @@ int main(int argc, char* argv[]) {
 
     initRectangles();
     initPiecesTexture(renderer);
+    initSelector(renderer);
 
     SDL_Event e;
     int quit = 0;
@@ -32,8 +36,27 @@ int main(int argc, char* argv[]) {
                     }
                 case SDL_MOUSEBUTTONDOWN:
                     if(e.button.button == SDL_BUTTON_LEFT) {
-                        uint8_t squareSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                        highlightedSquares = getTargetSquares(board, squareSelectionIndex);
+                        srcSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                        selectorSelectionIndex = srcSelectionIndex;
+                        highlightedSquares = getLegalMoves(board, srcSelectionIndex);
+                        selectorState = 0;
+                    }else if(e.button.button == SDL_BUTTON_RIGHT){
+                        if (selectorState == 1)
+                            break;
+
+                        selectorSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                        uint64_t legalSquares = getLegalMoves(board, srcSelectionIndex);
+                        if (legalSquares & (1ULL << selectorSelectionIndex)){
+                            highlightedSquares = 0;
+                            selectorState = 1;
+                            board[selectorSelectionIndex] = board[srcSelectionIndex];
+                            board[srcSelectionIndex] = EMPTY;
+                        }else{
+                            selectorSelectionIndex = srcSelectionIndex;
+                        }
+
+
+
                     }
                     break;
             }
@@ -43,6 +66,7 @@ int main(int argc, char* argv[]) {
         drawSquares(renderer);
         drawHighlightedSquares(highlightedSquares, renderer);
         drawPieces(renderer, board, WHITE_DIRECTION);
+        drawSelector(renderer, selectorSelectionIndex, selectorState);
         SDL_RenderPresent(renderer);
     }
 
