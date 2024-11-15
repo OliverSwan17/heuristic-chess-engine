@@ -3,6 +3,27 @@
 SDL_Rect* squaresRects[64];
 SDL_Rect* piecesRects[12];
 SDL_Texture* piecesTexture;
+SDL_Texture* unselectedTexture;
+SDL_Texture* selectedTexture;
+
+void initSelector(SDL_Renderer* renderer) {
+    SDL_Surface* unselectedSurface = IMG_Load("assets/selector/unselected.png");
+    if (unselectedSurface == NULL) {printf("%s\n", IMG_GetError());}
+    unselectedTexture = SDL_CreateTextureFromSurface(renderer, unselectedSurface);
+    SDL_FreeSurface(unselectedSurface);
+
+    SDL_Surface* selectedSurface = IMG_Load("assets/selector/selected.png");
+    if (selectedSurface == NULL) {printf("%s\n", IMG_GetError());}
+    selectedTexture = SDL_CreateTextureFromSurface(renderer, selectedSurface);
+    SDL_FreeSurface(selectedSurface);
+}
+
+void drawSelector(SDL_Renderer* renderer, uint8_t index, uint8_t state) {
+    if (state)
+        SDL_RenderCopy(renderer, selectedTexture, NULL, squaresRects[index]);
+    else
+        SDL_RenderCopy(renderer, unselectedTexture, NULL, squaresRects[index]);
+}
 
 void initPiecesTexture(SDL_Renderer* renderer) {
     SDL_Surface* surface = IMG_Load("assets/pieces/pieces.png");
