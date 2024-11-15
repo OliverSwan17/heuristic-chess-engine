@@ -2,8 +2,8 @@
 
 int main(int argc, char* argv[]) {
     generateKnightLookupTable();
-    uint8_t* board = fenToArray("rnbqk1nr/ppp2ppp/4p3/3p3Q/1b1P4/2N1P3/PPP2PPP/R1B1KBNR");
-    uint64_t highlightedSquares = getColourTargetSquares(board, WHITE);
+    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    uint64_t highlightedSquares = 0;
     uint8_t srcSelectionIndex = 0;
     uint8_t selectorSelectionIndex = 0;
     uint8_t selectorState = 0;
