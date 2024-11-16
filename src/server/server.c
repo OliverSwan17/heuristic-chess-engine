@@ -6,7 +6,7 @@
 #define PORT 12345
 #define BUFFER_SIZE 64
 
-// gcc -Wall -g -o server.exe server.c -lws2_32 && gcc -Wall -g -o client.exe client.c -lws2_32
+// gcc -Wall -g -o server.exe server.c -lws2_32
 int main() {
     WSADATA wsaData;
     SOCKET serverSocket;

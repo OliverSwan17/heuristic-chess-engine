@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
     #include <SDL2/SDL_image.h>  // For Windows (MinGW/MSYS2)
+    #include <winsock2.h>
+    #include <windows.h>
 #else
     #include <SDL_image.h>        // For Linux
 #endif
@@ -50,6 +52,13 @@
 
 //Fen
 extern uint8_t* fenToArray(char* fen);
+
+//Client
+extern DWORD  WINAPI client_thread(LPVOID lpParam);
+extern SOCKET client_sock;
+extern struct sockaddr_in server_addr;
+extern HANDLE hEvent;
+extern int colour;
 
 //Draw
 void initRectangles();

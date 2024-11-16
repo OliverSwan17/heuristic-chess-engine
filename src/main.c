@@ -1,8 +1,32 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
-    generateKnightLookupTable();
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+
+    #ifdef _WIN32
+    WSADATA wsaData;
+    HANDLE thread;
+    DWORD threadId;
+
+    hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+    client_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(12345);
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    
+    thread = CreateThread(NULL, 0, client_thread, (LPVOID)board, 0, &threadId);
+    
+    if (thread == NULL) {
+        printf("Thread creation failed.\n");
+        closesocket(client_sock);
+        WSACleanup();
+        return 1;
+    }
+    #endif
+
+    generateKnightLookupTable();
     uint64_t highlightedSquares = 0;
     uint8_t srcSelectionIndex = 0;
     uint8_t selectorSelectionIndex = 0;
@@ -51,6 +75,12 @@ int main(int argc, char* argv[]) {
                             selectorState = 1;
                             board[selectorSelectionIndex] = board[srcSelectionIndex];
                             board[srcSelectionIndex] = EMPTY;
+
+                            #ifdef _WIN32
+                            SetEvent(hEvent);
+                            #endif
+                            
+
                         }else{
                             selectorSelectionIndex = srcSelectionIndex;
                         }
@@ -69,6 +99,12 @@ int main(int argc, char* argv[]) {
         drawSelector(renderer, selectorSelectionIndex, selectorState);
         SDL_RenderPresent(renderer);
     }
+
+    #ifdef _WIN32
+    CloseHandle(thread);
+    closesocket(client_sock);
+    WSACleanup();
+    #endif
 
     SDL_DestroyWindow(window);
     SDL_Quit();
