@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include "fen.h"
+#include "chess.h"
 
 const uint8_t pieceLookupTable[256] = {
     ['p'] = B_PAWN,

@@ -1,5 +1,9 @@
 #include "chess.h"
 
+SOCKET client_sock;
+struct sockaddr_in server_addr;
+HANDLE hEvent;
+
 int main(int argc, char* argv[]) {
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
 
@@ -16,7 +20,7 @@ int main(int argc, char* argv[]) {
     server_addr.sin_port = htons(12345);
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     
-    thread = CreateThread(NULL, 0, client_thread, (LPVOID)board, 0, &threadId);
+    thread = CreateThread(NULL, 0, move_sync_thread, (LPVOID)board, 0, &threadId);
     
     if (thread == NULL) {
         printf("Thread creation failed.\n");

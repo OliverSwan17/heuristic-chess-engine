@@ -6,13 +6,13 @@
 #include <SDL2/SDL_main.h>
 
 #ifdef _WIN32
-    #include <SDL2/SDL_image.h>  // For Windows (MinGW/MSYS2)
+    #include <SDL2/SDL_image.h>
     #include <winsock2.h>
     #include <windows.h>
+    DWORD  WINAPI move_sync_thread(LPVOID lpParam);
 #else
-    #include <SDL_image.h>        // For Linux
+    #include <SDL_image.h>
 #endif
-
 
 //Piece Constants
 #define EMPTY 0
@@ -51,22 +51,20 @@
 #define SQUARE_SIZE (SCREEN_LENGTH / 8)
 
 //Fen
-extern uint8_t* fenToArray(char* fen);
+uint8_t* fenToArray(char* fen);
+#define B_PAWN 1
+#define B_KNIGHT 2
+#define B_BISHOP 3
+#define B_ROOK 4
+#define B_QUEEN 5
+#define B_KING 6
 
-//Client
-#ifdef _WIN32
-extern DWORD  WINAPI client_thread(LPVOID lpParam);
-extern SOCKET client_sock;
-extern struct sockaddr_in server_addr;
-extern HANDLE hEvent;
-extern int colour;
-#else	// Do these become a global pointer across files Olli?
-extern int client_thread(void *lpParam);
-extern int client_sock;
-extern struct sockaddr_in server_addr;
-extern int colour;
-#endif
-
+#define W_PAWN 9
+#define W_KNIGHT 10
+#define W_BISHOP 11
+#define W_ROOK 12
+#define W_QUEEN 13
+#define W_KING 14
 
 //Draw
 void initRectangles();
