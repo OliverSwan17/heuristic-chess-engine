@@ -7,11 +7,9 @@ ifeq ($(OS),Windows_NT)
     HEADERS_DIR = include
     TARGET = chess
 
-    SRCS = $(wildcard $(SRCS_DIR)/*.c)
-    $(info SRCS = $(SRCS))  # Debug output
+    SRCS = $(wildcard $(SRCS_DIR)/*.c) $(wildcard src/client/linux_win.c)
 
     OBJS = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o,$(SRCS))
-    $(info OBJS = $(OBJS))  # Debug output
 
     $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
@@ -19,6 +17,8 @@ ifeq ($(OS),Windows_NT)
     $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
 	@echo "Compiling $< into $@"  # Debug output
 	$(CC) $(CFLAGS) -c $< -o $@
+	gcc -Wall -g -o src/server/server.exe src/server/server_win.c -lws2_32 -O3
+	gcc -Wall -g -o src/client/client.exe src/client/client_win.c -lw2_32 -O3
 
     clean:
 	rm -f $(OBJS) $(TARGET)
@@ -30,27 +30,31 @@ ifeq ($(OS),Windows_NT)
 	mkdir -p $(HEADERS_DIR)
 
 else
+    
     CC = gcc
     CFLAGS = -Wall -g -Iinclude $(shell sdl2-config --cflags)
-    LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image 
+    LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lc
     SRCS_DIR = src
     OBJS_DIR = obj
     HEADERS_DIR = include
     TARGET = chess
 
-    SRCS = $(wildcard $(SRCS_DIR)/*.c)
-    OBJS = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o,$(SRCS))
+    SRCS = $(wildcard $(SRCS_DIR)/*.c) $(wildcard src/client/linux_linux.c)
 
-    $(info $(TARGET))
-    $(info $(OBJS))
+    #SRCS = $(wildcard $(SRCS_DIR)/*.c) src/client/client_linux.c src/server/server_linux.c
+    OBJS = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o,$(SRCS)) #src/client/client_linux.c src/server/server_linux.c 
 
-    $(TARGET): $(OBJS)
+
+    $(TARGET): $(OBJS) 
+	@echo "Linux selected"  # Debug output to show object file being compiled
 	@echo "Linking $(TARGET)..."  # Debug output to confirm linking
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
     $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
 	@echo "Compiling $< into $@"  # Debug output to show object file being compiled
 	$(CC) $(CFLAGS) -c $< -o $@
+	# gcc src/server/server_linux.c -o src/server/server_linux.elf -lc -O3
+	# gcc  -o src/client/client.elf src/client/client_linux.c -lc -O3
 
     clean:
 	rm -f $(OBJS) $(TARGET)

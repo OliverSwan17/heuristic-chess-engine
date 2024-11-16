@@ -54,11 +54,19 @@
 extern uint8_t* fenToArray(char* fen);
 
 //Client
+#ifdef _WIN32
 extern DWORD  WINAPI client_thread(LPVOID lpParam);
 extern SOCKET client_sock;
 extern struct sockaddr_in server_addr;
 extern HANDLE hEvent;
 extern int colour;
+#else	// Do these become a global pointer across files Olli?
+extern int client_thread(void *lpParam);
+extern int client_sock;
+extern struct sockaddr_in server_addr;
+extern int colour;
+#endif
+
 
 //Draw
 void initRectangles();
