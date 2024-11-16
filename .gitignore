@@ -1,7 +1,9 @@
 .vscode/
 chess.exe
 chess
-obj/*
+obj/core/*
+obj/linux_networking/*
+obj/windows_networking/*
 !obj/.gitkeep
 venv/
 venv/*
