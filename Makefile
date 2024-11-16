@@ -53,8 +53,8 @@ else
     $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
 	@echo "Compiling $< into $@"  # Debug output to show object file being compiled
 	$(CC) $(CFLAGS) -c $< -o $@
-	# gcc src/server/server_linux.c -o src/server/server_linux.elf -lc -O3
-	# gcc  -o src/client/client.elf src/client/client_linux.c -lc -O3
+	gcc src/server/server_linux.c -o src/server/server_linux.elf -lc -O3
+	#gcc  -o src/client/client.elf src/client/client_linux.c -lc -O3
 
     clean:
 	rm -f $(OBJS) $(TARGET)
