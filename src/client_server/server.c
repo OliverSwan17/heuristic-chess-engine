@@ -14,64 +14,56 @@ int main() {
     char buffer[BUFFER_SIZE];
     int clientAddrLen = sizeof(clientAddr);
     int clientCount = 0;
-    
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-        return 1;
 
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
     serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (serverSocket == INVALID_SOCKET) {
-        WSACleanup();
-        return 1;
-    }
-
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(PORT);
-
-    if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        closesocket(serverSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    struct sockaddr_in client1, client2;
+    bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    struct sockaddr_in client_black, client_white;
 
     while (1) {
         if (clientCount == 2) {
             break;
         }
 
-        int recvLen = recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&clientAddr, &clientAddrLen);
-        if (recvLen == SOCKET_ERROR) {
-            printf("Receive failed\n");
-            continue;
-        }
-
+        recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&clientAddr, &clientAddrLen);
+       
         if (clientCount == 0) {
-            client1 = clientAddr;
+            client_black = clientAddr;
             printf("Client 1 connected: %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
             clientCount++;
         }
         else if (clientCount == 1) {
-            client2 = clientAddr;
+            client_white = clientAddr;
             printf("Client 2 connected: %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
             clientCount++;
         }
     }
+    printf("All clients connected\n");
 
     memset(buffer, 0, BUFFER_SIZE);
     strncpy(buffer, "0", 2);
-
-    if (sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client1, clientAddrLen) == SOCKET_ERROR)
-        printf("Send to Client 1 failed\n");
+    sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_black, clientAddrLen);
     
     memset(buffer, 0, BUFFER_SIZE);
     strncpy(buffer, "1", 2);
+    sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_white, clientAddrLen);
+      
+    while(1) {
+        memset(buffer, 0, BUFFER_SIZE);
+        recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_white, &clientAddrLen);
+        printf("%s\n", buffer);
+        sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_black, clientAddrLen);
+            
+        memset(buffer, 0, BUFFER_SIZE);
+        recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_black, &clientAddrLen);
+        printf("%s\n", buffer);
+        sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_white, clientAddrLen);
+    }
 
-    if (sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client2, clientAddrLen) == SOCKET_ERROR)
-        printf("Send to Client 2 failed\n");
-    
     closesocket(serverSocket);
     WSACleanup();
     return 0;
