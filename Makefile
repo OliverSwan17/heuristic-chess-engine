@@ -1,61 +1,82 @@
 ifeq ($(OS),Windows_NT)
-    CC = gcc
-    CFLAGS = -Wall -g -Iinclude -I/c/msys64/mingw64/include/SDL2
-    LDFLAGS = -L/c/msys64/mingw64/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lws2_32
-    SRCS_DIR = src
-    OBJS_DIR = obj
-    HEADERS_DIR = include
-    TARGET = chess
+CC = gcc
+CFLAGS = -Wall -g -Iinclude -I/c/msys64/mingw64/include/SDL2
+LDFLAGS = -L/c/msys64/mingw64/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lws2_32
 
-    SRCS = $(wildcard $(SRCS_DIR)/*.c) $(wildcard src/client/linux_win.c)
+SRCS_DIR = src
+OBJS_DIR = obj
+HEADERS_DIR = include
 
-    OBJS = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o,$(SRCS))
+TARGET = chess
 
-    $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+SRCS = $(shell find $(SRCS_DIR) -name '*.c' | grep -v 'src/linux_networking' | grep -v 'src/windows_networking/server.c')
+OBJS = $(SRCS:$(SRCS_DIR)/%.c=$(OBJS_DIR)/%.o)
 
-    $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
-	@echo "Compiling $< into $@"  # Debug output
+# Explicitly add server.o as it's in a specific directory
+SERVER_OBJ = $(OBJS_DIR)/windows_networking/server.o
+
+all: $(TARGET)
+
+# Linking objects
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+
+# Rule to compile .c files into .o files
+$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
-	gcc -Wall -g -o src/server/server.exe src/server/server_win.c -lws2_32 -O3
-	gcc -Wall -g -o src/client/client.exe src/client/client_win.c -lw2_32 -O3
 
-    clean:
-	rm -f $(OBJS) $(TARGET)
+clean:
+	rm -f $(OBJS) $(TARGET) server.exe $(SERVER_OBJ)
 
-    $(OBJS_DIR):
-	mkdir -p $(OBJS_DIR)
-
-    $(HEADERS_DIR):
-	mkdir -p $(HEADERS_DIR)
-
-else
-    
-    CC = gcc
-    CFLAGS = -Wall -g -Iinclude $(shell sdl2-config --cflags)
-    LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lc
-    SRCS_DIR = src
-    OBJS_DIR = obj
-    HEADERS_DIR = include
-    TARGET = chess
-
-    SRCS = $(wildcard $(SRCS_DIR)/*.c) $(wildcard src/client/linux_linux.c)
-
-    #SRCS = $(wildcard $(SRCS_DIR)/*.c) src/client/client_linux.c src/server/server_linux.c
-    OBJS = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o,$(SRCS)) #src/client/client_linux.c src/server/server_linux.c 
+.PHONY: all clean server
 
 
-    $(TARGET): $(OBJS) 
-	@echo "Linux selected"  # Debug output to show object file being compiled
-	@echo "Linking $(TARGET)..."  # Debug output to confirm linking
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
+# Specific target to build server.exe
+server: $(SERVER_OBJ)
+	$(CC) -Wall -g -o server.exe src/windows_networking/server.c -lws2_32
 
-    $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
-	@echo "Compiling $< into $@"  # Debug output to show object file being compiled
+$(SERVER_OBJ): src/windows_networking/server.c
 	$(CC) $(CFLAGS) -c $< -o $@
-	gcc src/server/server_linux.c -o src/server/server_linux.elf -lc -O3
-	#gcc  -o src/client/client.elf src/client/client_linux.c -lc -O3
+endif
 
-    clean:
-	rm -f $(OBJS) $(TARGET)
+# Linux version
+ifeq ($(OS),Linux)
+CC = gcc
+CFLAGS = -Wall -g -Iinclude -I/usr/include/SDL2
+LDFLAGS = -L/usr/lib -lSDL2 -lSDL2_image -lpthread -lm
+
+SRCS_DIR = src
+OBJS_DIR = obj
+HEADERS_DIR = include
+
+TARGET = chess
+
+SRCS = $(shell find $(SRCS_DIR) -name '*.c' | grep -v 'src/linux_networking' | grep -v 'src/windows_networking/server.c')
+OBJS = $(SRCS:$(SRCS_DIR)/%.c=$(OBJS_DIR)/%.o)
+
+# Explicitly add server.o as it's in a specific directory
+SERVER_OBJ = $(OBJS_DIR)/linux_networking/server.o
+
+all: $(TARGET)
+
+# Linking objects
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+
+# Rule to compile .c files into .o files
+$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(TARGET) server $(SERVER_OBJ)
+
+.PHONY: all clean server
+
+# Specific target to build server
+server: $(SERVER_OBJ)
+	$(CC) -Wall -g -o server src/linux_networking/server.c -lpthread
+
+$(SERVER_OBJ): src/linux_networking/server.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 endif
