@@ -4,7 +4,7 @@
 #include <winsock2.h>
 
 #define PORT 12345
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 64
 
 // gcc -Wall -g -o server.exe server.c -lws2_32 && gcc -Wall -g -o client.exe client.c -lws2_32
 int main() {
@@ -46,22 +46,22 @@ int main() {
 
     memset(buffer, 0, BUFFER_SIZE);
     strncpy(buffer, "0", 2);
-    sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_black, clientAddrLen);
+    sendto(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_black, clientAddrLen);
     
     memset(buffer, 0, BUFFER_SIZE);
     strncpy(buffer, "1", 2);
-    sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_white, clientAddrLen);
+    sendto(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_white, clientAddrLen);
       
     while(1) {
         memset(buffer, 0, BUFFER_SIZE);
         recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_white, &clientAddrLen);
         printf("%s\n", buffer);
-        sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_black, clientAddrLen);
+        sendto(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_black, clientAddrLen);
             
         memset(buffer, 0, BUFFER_SIZE);
         recvfrom(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_black, &clientAddrLen);
         printf("%s\n", buffer);
-        sendto(serverSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&client_white, clientAddrLen);
+        sendto(serverSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_white, clientAddrLen);
     }
 
     closesocket(serverSocket);
