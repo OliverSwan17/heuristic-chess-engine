@@ -1,8 +1,10 @@
 #include "chess.h"
 
+#ifdef _WIN32
 SOCKET client_sock;
 struct sockaddr_in server_addr;
 HANDLE hEvent;
+#endif
 
 int main(int argc, char* argv[]) {
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
