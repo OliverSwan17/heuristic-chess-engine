@@ -10,4 +10,5 @@ src/server/server.elf
 src/client/client.exe
 src/client/client.elf
 server.exe
+server
 
