@@ -4,6 +4,10 @@
 SOCKET client_sock;
 struct sockaddr_in server_addr;
 HANDLE hEvent;
+#else
+pthread_t thread;
+int client_sock;
+struct sockaddr_in server_addr;
 #endif
 
 int main(int argc, char* argv[]) {
@@ -30,6 +34,13 @@ int main(int argc, char* argv[]) {
         WSACleanup();
         return 1;
     }
+    #else
+    client_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(12345);
+    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+    pthread_create(&thread, NULL, move_sync_thread, (void*)board);
     #endif
 
     generateKnightLookupTable();
@@ -86,13 +97,9 @@ int main(int argc, char* argv[]) {
                             SetEvent(hEvent);
                             #endif
                             
-
                         }else{
                             selectorSelectionIndex = srcSelectionIndex;
                         }
-
-
-
                     }
                     break;
             }
@@ -110,6 +117,8 @@ int main(int argc, char* argv[]) {
     CloseHandle(thread);
     closesocket(client_sock);
     WSACleanup();
+    #else
+    close(client_sock);
     #endif
 
     SDL_DestroyWindow(window);

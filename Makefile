@@ -37,10 +37,7 @@ server: $(SERVER_OBJ)
 
 $(SERVER_OBJ): src/windows_networking/server.c
 	$(CC) $(CFLAGS) -c $< -o $@
-endif
-
-# Linux version
-ifeq ($(OS),Linux)
+else
 CC = gcc
 CFLAGS = -Wall -g -Iinclude -I/usr/include/SDL2
 LDFLAGS = -L/usr/lib -lSDL2 -lSDL2_image -lpthread -lm
@@ -51,7 +48,7 @@ HEADERS_DIR = include
 
 TARGET = chess
 
-SRCS = $(shell find $(SRCS_DIR) -name '*.c' | grep -v 'src/linux_networking' | grep -v 'src/windows_networking/server.c')
+SRCS = $(shell find $(SRCS_DIR) -name '*.c' | grep -v 'src/windows_networking' | grep -v 'src/linux_networking/server.c')
 OBJS = $(SRCS:$(SRCS_DIR)/%.c=$(OBJS_DIR)/%.o)
 
 # Explicitly add server.o as it's in a specific directory

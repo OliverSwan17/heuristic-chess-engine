@@ -1,17 +1,14 @@
-#include "client.h" // Extern/globals
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include "chess.h"
 
-int client_thread(void *lpParam) {
-	uint8_t *board = (uint8_t *)lpParam;
+void* move_sync_thread(void* board){
+	extern pthread_t thread;
+	extern int client_sock;
+	extern struct sockaddr_in server_addr;
+
+	board = (uint8_t *)board;
 	int recv_len;
 	char initialServerResponse[2];
+	int client_colour;
 
 	// First message to establish connection
     	sendto(client_sock, 0, 0, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));

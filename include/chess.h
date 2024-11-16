@@ -12,6 +12,12 @@
     DWORD  WINAPI move_sync_thread(LPVOID lpParam);
 #else
     #include <SDL_image.h>
+    #include <unistd.h>
+    #include <pthread.h>
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+    #include <arpa/inet.h>
+    void* move_sync_thread(void* board);
 #endif
 
 //Piece Constants
