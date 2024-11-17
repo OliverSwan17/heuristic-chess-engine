@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
 
+//#define NETWORKING
 #ifdef _WIN32
     #include <SDL2/SDL_image.h>
     #include <winsock2.h>

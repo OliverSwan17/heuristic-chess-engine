@@ -13,6 +13,7 @@ struct sockaddr_in server_addr;
 int main(int argc, char* argv[]) {
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
 
+    #ifdef NETWORKING
     #ifdef _WIN32
     WSADATA wsaData;
     HANDLE thread;
@@ -41,6 +42,7 @@ int main(int argc, char* argv[]) {
     server_addr.sin_port = htons(12345);
     inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
     pthread_create(&thread, NULL, move_sync_thread, (void*)board);
+    #endif
     #endif
 
     generateKnightLookupTable();
@@ -93,8 +95,17 @@ int main(int argc, char* argv[]) {
                             board[selectorSelectionIndex] = board[srcSelectionIndex];
                             board[srcSelectionIndex] = EMPTY;
 
+                            if (((board[selectorSelectionIndex] & 0b111) == PAWN) && (RANK(selectorSelectionIndex) == 1 || RANK(selectorSelectionIndex) == 8)){
+                                if(COLOUR(board[selectorSelectionIndex]) == WHITE)
+                                    board[selectorSelectionIndex] = W_QUEEN;
+                                else
+                                    board[selectorSelectionIndex] = B_QUEEN;
+                            }
+
+                            #ifdef NETWORKING
                             #ifdef _WIN32
                             SetEvent(hEvent);
+                            #endif
                             #endif
                             
                         }else{
@@ -113,12 +124,14 @@ int main(int argc, char* argv[]) {
         SDL_RenderPresent(renderer);
     }
 
+    #ifdef NETWORKING
     #ifdef _WIN32
     CloseHandle(thread);
     closesocket(client_sock);
     WSACleanup();
     #else
     close(client_sock);
+    #endif
     #endif
 
     SDL_DestroyWindow(window);

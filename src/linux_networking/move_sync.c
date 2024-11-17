@@ -42,4 +42,3 @@ void* move_sync_thread(void* board){
 
     	return 0;
 }
-
