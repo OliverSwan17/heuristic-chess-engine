@@ -10,18 +10,20 @@ This use of branches will make it easy for benchmarking and comparing the perfor
 ## Piece Representation
 
 The pieces are represented using a `uint8_t`. Bits zero through three represent the piece type.
-|Value | Piece|
-|-----|-------|
-`000` | Empty
-`001` | Pawn
-`010` | Knight
-`011` | Bishop
-`100` | Rook
-`101` | Queen
-`110` | King
-`111` | Undefined
+
+|Value | Piece     |
+|------|-----------|
+|`000` | Empty     |
+|`001` | Pawn      |
+|`010` | Knight    |
+|`011` | Bishop    |
+|`100` | Rook      |
+|`101` | Queen     |
+|`110` | King      |
+|`111` | Undefined |
 
 The fourth bit indicates the piece colour.
+
 |Value|Colour|
 |-----|------|
 |`0XXX`|Black|
