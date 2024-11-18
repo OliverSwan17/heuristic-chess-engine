@@ -6,6 +6,14 @@ it to a computer-readable object that C will understand. The functionality
 that this will offer is to provide continuous updates as the game is 
 played, delivering updates when something happens in game. I will 
 probably end up sending information to the C program over localhost.
+
+
+
+NOTE: YOU ABSOLUTELY NEED TO COUNT FOR ALL !!24!!  DIFFERENT
+COLOUR/PIECE-COLOUR/PIECE COMBINATIONS. CURRENTLY ONLY DOING 
+22, SO IT WILL BE CONFUSED WITH KINGS ON OPPOSITE COLOUR
+SQUARES
+
 """
 
 import os               
@@ -19,6 +27,9 @@ from matplotlib import pyplot as plt
 import cv2          
 from PIL import Image   
 import torch            
+from torch import nn
+import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.io import decode_image
@@ -28,11 +39,6 @@ IMAGES_PATH = DIR_PATH + '/images/'
 TRAINING_PATH = DIR_PATH + '/training_data/'
 screenshot_count = 0
 hashes = set()
-
-
-data_transform = transforms.Compose([
-    transforms.Resize(size=(64, 64)),
-    transforms.ToTensor()])
 
 
 class ChessboardSquares():
@@ -46,50 +52,69 @@ class ChessboardSquares():
                                5: 'dbb',
                                6: 'lbk',
                                7: 'dbr',
-                               10: 'dbp',
-                               11: 'lbp',
-                               17: 'due',
-                               18: 'lue',
-                               49: 'dwp',
-                               52: 'lwp',
-                               56: 'dwr',
-                               57: 'lwk',
-                               58: 'dwb',
-                               59: 'lwq',
-                               60: 'dwk',
-                               61: 'lwb',
-                               62: 'dwk',
-                               63: 'lwr'}
-
-        self.transform = transforms.Compose([transforms.Resize(size=(64, 64)), transforms.ToTensor()])
-        self.data = self.get_files()
+                               8: 'dbp',
+                               9: 'lbp',
+                               10: 'due',
+                               11: 'lue',
+                               12: 'dwp',
+                               13: 'lwp',
+                               14: 'dwr',
+                               15: 'lwk',
+                               16: 'dwb',
+                               17: 'lwq',
+                               18: 'dwk',
+                               19: 'lwb',
+                               20: 'dwk',
+                               21: 'lwr'}
+        self.label_to_index = {label: idx for idx, label in self.__labels_map__.items()}
+        self.transform = transforms.Compose([transforms.Resize(size=( 64, 64)), transforms.ToTensor()])
+        self.dataPIL = self.get_files_PIL()
+        self.dataTensor = self.get_files_tensor()
         self.len = self.__len__()
 
     def __len__(self):
-        return len(self.data)
+        return len(self.dataPIL)
 
     def __getitem__(self, idx):
-        return self.data[idx][0], self.data[idx][1] # return data, label 
+       # return self.dataTensor[idx][0], self.dataTensor[idx][1] # return data, label 
+        img, label = self.dataTensor[idx]
+        label_index = self.label_to_index[label]
+        return img, label_index
+
 
     # List of (raw_data, type)
-    def get_files(self): 
+    def get_files_PIL(self): 
         out = []
+
         for file in os.listdir(TRAINING_PATH):
             key = -1
-            print(file)
             file_match = re.search(r"DATA_\d+_(\d+)\.png", file)
             key = file_match.group(1)
             if key == -1:
                 raise ValueError(r"Match error: {file}")
-            #out.append( (self.transform(decode_image(TRAINING_PATH + file)), self.__labels_map__[key]) ) 
             out.append( (Image.open(TRAINING_PATH+file), self.__labels_map__[int(key)]) )
         return out
+
+    def get_files_tensor(self): 
+        out = []
+        for file in os.listdir(TRAINING_PATH):
+            key = -1
+            file_match = re.search(r"DATA_\d+_(\d+)\.png", file)
+            key = file_match.group(1)
+            if key == -1:
+                raise ValueError(r"Match error: {file}")
+            img = Image.open(TRAINING_PATH + file)
+            img_tensor = self.transform(img)
+            out.append( (img_tensor, self.__labels_map__[int(key)]) )
+            #out.append( (decode_image(TRAINING_PATH + file), self.__labels_map__[int(key)]) ) 
+        return out
+
 
     def plot(self):
         figure = plt.figure(figsize = (8,8))
         cols,rows = 11, 2
         for i in range(1, cols * rows):
-            img, label = self.data[i]
+            img, label = self.dataPIL[i]
             figure.add_subplot(rows, cols, i)
             plt.title(label)
             plt.axis("off")
@@ -97,6 +122,42 @@ class ChessboardSquares():
         plt.show()
 
 
+class NeuralNetwork(nn.Module):
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+
+        # First convolutional block - change the input channels to 1 for grayscale
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)  # 1 input channel for grayscale
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.pool = nn.MaxPool2d(2, 2)
+
+        # Second convolutional block
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(128)
+
+        # Fully connected layers
+        self.fc1 = nn.Linear(128 * 8 * 8, 512)  # Adjust the size based on image dimensions
+        self.fc2 = nn.Linear(512, 64)  # Number of classes for piece type and color
+
+        # Dropout layer to prevent overfitting
+        self.dropout = nn.Dropout(0.5)
+
+    def forward(self, x):
+        x = torch.relu(self.bn1(self.conv1(x)))
+        x = self.pool(x)
+        x = torch.relu(self.bn2(self.conv2(x)))
+        x = self.pool(x)
+        x = torch.relu(self.bn3(self.conv3(x)))
+        x = self.pool(x)
+
+        # Flatten the output for fully connected layers
+        x = x.view(-1, 128 * 8 * 8)
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)  # Apply dropout during training
+        x = self.fc2(x)
+        return x
 
 
 
@@ -140,11 +201,14 @@ def take_screenshot(save: bool = False):
 
 
 def output_processed_array_as_img(squares):
+    id_tag = int(input("Enter an id tag for this: "))
     keep_list = [0,1,2,3,4,5,6,7,10,11,17,18,49,52,56,57,58,59,60,61,62,63]
+    keep_list_arr = range(0, len(keep_list))
+    comp = {keep_list[i]:keep_list_arr[i] for i in range(len(keep_list))}
     for i in range(64):
         if i in keep_list:
             #cv2.imwrite(TRAINING_PATH + f"DATA_{screenshot_count}_{i}.png", squares[i])
-            cv2.imwrite(TRAINING_PATH + f"DATA_2_{i}.png", squares[i])
+            cv2.imwrite(TRAINING_PATH + f"DATA_{id_tag}_{comp[i]}.png", squares[i])
 
 # Returns a 64-long array that breaks images 
 def process(screenshot):
@@ -181,8 +245,67 @@ def capture_training_data():
             #print(f"New board detected - SHA256: {hash_state.hex()}")
             output_processed_array_as_img(current_state) 
             hashes.add(hash_state)
+    else:
+        print("No data found")
 
+
+def train():
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps"
+        if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    print(f"Training on {device}")
+
+
+    dataset = ChessboardSquares()
+    #train_loader = DataLoader(dataset, batch_size = 40, shuffle = True)
+    train_loader = DataLoader(dataset, batch_size = 22, shuffle = False)
+
+    model = NeuralNetwork()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    criterion = nn.CrossEntropyLoss()
+
+    # Training Loop
+    epochs = 99 
+    for epoch in range(epochs):
+        model.train()
+        running_loss = 0.0
+        correct = 0
+        total = 0
+
+        for data, labels in train_loader:
+            optimizer.zero_grad()  
+
+            # Forward pass
+            outputs = model(data)
+            loss = criterion(outputs, labels)
+
+            # Backward pass and optimize
+            loss.backward()
+            optimizer.step()
+
+            # Calculate running statistics
+            running_loss += loss.item()
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+        
+        print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}, Accuracy: {100 * correct / total:.4f}%")
+        if (correct == total) or ((correct/total) > 0.9998):
+            print("Model found")
+            torch.save(model.state_dict(), DIR_PATH+"/ML_MODEL")
+            return 1
+
+
+def translate():
+    data = process(take_screenshot())
 
 if __name__ == '__main__':
-    mlData = ChessboardSquares()
-    mlData.plot()
+    #capture_training_data()
+    #train()
+
+
+
