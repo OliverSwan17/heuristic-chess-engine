@@ -1,21 +1,4 @@
 #!/usr/bin/env python3
-
-"""
-This script seeks to take a screenshot of the chess board and translate 
-it to a computer-readable object that C will understand. The functionality
-that this will offer is to provide continuous updates as the game is 
-played, delivering updates when something happens in game. I will 
-probably end up sending information to the C program over localhost.
-
-
-
-NOTE: YOU ABSOLUTELY NEED TO COUNT FOR ALL !!24!!  DIFFERENT
-COLOUR/PIECE-COLOUR/PIECE COMBINATIONS. CURRENTLY ONLY DOING 
-22, SO IT WILL BE CONFUSED WITH KINGS ON OPPOSITE COLOUR
-SQUARES
-
-"""
-
 import os               
 import threading        
 import time
@@ -34,6 +17,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.io import decode_image
 
+
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 IMAGES_PATH = DIR_PATH + '/images/'
 TRAINING_PATH = DIR_PATH + '/training_data/'
@@ -44,30 +28,35 @@ hashes = set()
 class ChessboardSquares():
     def __init__(self):
         self.__labels_map__ = {
-                               0: 'lbr',
-                               1: 'dbk',
-                               2: 'lbb',
-                               3: 'dbq',
-                               4: 'lbk',
-                               5: 'dbb',
-                               6: 'lbk',
-                               7: 'dbr',
-                               8: 'dbp',
-                               9: 'lbp',
-                               10: 'due',
-                               11: 'lue',
-                               12: 'dwp',
-                               13: 'lwp',
-                               14: 'dwr',
-                               15: 'lwk',
-                               16: 'dwb',
-                               17: 'lwq',
-                               18: 'dwk',
-                               19: 'lwb',
-                               20: 'dwk',
-                               21: 'lwr'}
+                               0: 'lbr',    # Light Black Rook
+                               1: 'dbk',    # Dark  Black Knight
+                               2: 'lbb',    # Light Black Bishop
+                               3: 'dbq',    # Dark  Black Queen
+                               4: 'lbK',    # Light Black King
+                               5: 'dbb',    # Dark  Black Bishop
+                               6: 'lbk',    # Light Black Knight
+                               7: 'dbr',    # Dark  Black Rook
+                               8: 'dbp',    # Dark  Black Pawn
+                               9: 'lbp',    # Light Black Pawn
+                               10: 'due',   # Dark  Undef Empty
+                               11: 'lue',   # Light Undef Empty
+                               12: 'dwp',   # Dark  White Pawn
+                               13: 'lwp',   # Light White Pawn
+                               14: 'dwr',   # Dark  White Rook
+                               15: 'lwk',   # Light White Knight
+                               16: 'dwb',   # Dark  White Bishop
+                               17: 'lwq',   # Light White Queen
+                               18: 'dwK',   # Dark  White King
+                               19: 'lwb',   # Light White Bishop
+                               20: 'dwk',   # Dark  White Knight
+                               21: 'lwr',   # Light White Rook
+                               22: 'dbK',   # Dark  Black King
+                               23: 'lwK',   # Light White King
+                               24: 'lbq',   # Light Black Queen
+                               25: 'dwq'}   # Dark  White Queen
+
         self.label_to_index = {label: idx for idx, label in self.__labels_map__.items()}
-        self.transform = transforms.Compose([transforms.Resize(size=( 64, 64)), transforms.ToTensor()])
+        self.transform = transforms.Compose([transforms.Resize(size=(64, 64)), transforms.ToTensor()])
         self.dataPIL = self.get_files_PIL()
         self.dataTensor = self.get_files_tensor()
         self.len = self.__len__()
@@ -76,11 +65,9 @@ class ChessboardSquares():
         return len(self.dataPIL)
 
     def __getitem__(self, idx):
-       # return self.dataTensor[idx][0], self.dataTensor[idx][1] # return data, label 
         img, label = self.dataTensor[idx]
         label_index = self.label_to_index[label]
         return img, label_index
-
 
     # List of (raw_data, type)
     def get_files_PIL(self): 
@@ -94,6 +81,7 @@ class ChessboardSquares():
                 raise ValueError(r"Match error: {file}")
             out.append( (Image.open(TRAINING_PATH+file), self.__labels_map__[int(key)]) )
         return out
+
 
     def get_files_tensor(self): 
         out = []
@@ -210,6 +198,17 @@ def output_processed_array_as_img(squares):
             #cv2.imwrite(TRAINING_PATH + f"DATA_{screenshot_count}_{i}.png", squares[i])
             cv2.imwrite(TRAINING_PATH + f"DATA_{id_tag}_{comp[i]}.png", squares[i])
 
+# This looks at squares 16, 17, 24, 25
+def output_processed_array_as_img_special(squares, tag):
+    keep_list = [16, 17, 24, 25] 
+    keep_list_arr = {17:22, 25:23, 16:24, 24:25}
+    comp = keep_list_arr
+
+    for i in range(64): 
+        if i in keep_list:
+            cv2.imwrite(TRAINING_PATH + f"DATA_{tag}_{comp[i]}.png", squares[i])
+
+
 # Returns a 64-long array that breaks images 
 def process(screenshot):
     image = np.array(screenshot)
@@ -249,6 +248,15 @@ def capture_training_data():
         print("No data found")
 
 
+
+def capture_training_data_special(tag):
+    current_state = process(take_screenshot(save=False)) 
+    if current_state != None and current_state[0].size > 150: 
+        output_processed_array_as_img_special(current_state, tag) 
+    else:
+        print("No data found")
+
+
 def train():
     device = (
         "cuda"
@@ -261,15 +269,17 @@ def train():
 
 
     dataset = ChessboardSquares()
-    #train_loader = DataLoader(dataset, batch_size = 40, shuffle = True)
-    train_loader = DataLoader(dataset, batch_size = 22, shuffle = False)
+    train_loader = DataLoader(dataset, batch_size = 26, shuffle = False)
 
     model = NeuralNetwork()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
 
+    best_acc = -1
+    best_loss = -1
+
     # Training Loop
-    epochs = 99 
+    epochs = 100 
     for epoch in range(epochs):
         model.train()
         running_loss = 0.0
@@ -292,20 +302,33 @@ def train():
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+       
+        loss = running_loss/len(train_loader)
+        acc = correct/total
+
+        #print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}, Accuracy: {100 * correct / total:.4f}%")
+        print(f"Epoch {epoch+1}/{epochs}, Loss: {(loss):.4f}, Accuracy: {acc*100:.4f}%")
         
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}, Accuracy: {100 * correct / total:.4f}%")
-        if (correct == total) or ((correct/total) > 0.9998):
-            print("Model found")
-            torch.save(model.state_dict(), DIR_PATH+"/ML_MODEL")
-            return 1
+        if (best_acc == -1) and (best_loss == -1):
+            print("Tentative model...")
+            best_acc = acc
+            best_loss = loss
+            torch.save(model.state_dict(), DIR_PATH + "/" + "model.pth")
+
+        if acc >= best_acc and loss <= best_loss:
+            print("Saving model...")
+            best_acc = acc
+            best_loss = loss
+            torch.save(model.state_dict(), DIR_PATH + "/" + "model.pth")
+
+    print(f"\nBest model saved. Accuracy: {best_acc}\tLoss: {best_loss}")
 
 
 def translate():
     data = process(take_screenshot())
 
 if __name__ == '__main__':
-    #capture_training_data()
-    #train()
+    train()
 
 
 
