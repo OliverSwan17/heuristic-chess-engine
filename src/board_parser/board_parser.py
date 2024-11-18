@@ -127,7 +127,7 @@ class NeuralNetwork(nn.Module):
 
         # Fully connected layers
         self.fc1 = nn.Linear(128 * 8 * 8, 512)  # Adjust the size based on image dimensions
-        self.fc2 = nn.Linear(512, 64)  # Number of classes for piece type and color
+        self.fc2 = nn.Linear(512, 26)  # Number of classes for piece type and color
 
         # Dropout layer to prevent overfitting
         self.dropout = nn.Dropout(0.5)
@@ -146,37 +146,6 @@ class NeuralNetwork(nn.Module):
         x = self.dropout(x)  # Apply dropout during training
         x = self.fc2(x)
         return x
-
-
-
-def piece_builder(piece, colour):
-    out = 0b00000000
-    
-    if piece.lower() == 'pawn':
-        out = 0b001 & 0b00000111
-    elif piece.lower() == 'knight':
-        out = 0b010 & 0b00000111
-    elif piece.lower() == 'bishop':
-        out = 0b011 & 0b00000111
-    elif piece.lower() == 'rook':
-        out = 0b100 & 0b00000111
-    elif piece.lower() == 'queen':
-        out = 0b101 & 0b00000111
-    elif piece.lower() == 'king':
-        out = 0b110 & 0b00000111
-    elif piece.lower() == 'undefined':
-        out = 0b111 & 0b00000000
-    else:
-        raise ValueError("Piece not specified")
-
-    if colour.lower()[0] == 'b':
-        out = out & 0b00000111
-    elif colour.lower()[0] == 'w':
-        out = out | 0b00001000
-    else:
-        raise ValueError("Colour not specified")
-    
-    return out
 
 
 def take_screenshot(save: bool = False):
@@ -269,10 +238,10 @@ def train():
 
 
     dataset = ChessboardSquares()
-    train_loader = DataLoader(dataset, batch_size = 26, shuffle = False)
+    train_loader = DataLoader(dataset, batch_size = 40, shuffle = True)
 
-    model = NeuralNetwork()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    model = NeuralNetwork() # TOY WITH THESE VALUES
+    optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay = 1e-5)
     criterion = nn.CrossEntropyLoss()
 
     best_acc = -1
@@ -323,12 +292,126 @@ def train():
 
     print(f"\nBest model saved. Accuracy: {best_acc}\tLoss: {best_loss}")
 
+def piece_builder(piece, colour):
+    out = 0b00000000
+    
+    if piece.lower() == 'p':
+        out = 0b001 & 0b00000111
+    elif piece.lower() == 'k':
+        out = 0b010 & 0b00000111
+    elif piece.lower() == 'b':
+        out = 0b011 & 0b00000111
+    elif piece.lower() == 'r':
+        out = 0b100 & 0b00000111
+    elif piece.lower() == 'q':
+        out = 0b101 & 0b00000111
+    elif piece.lower() == 'K':
+        out = 0b110 & 0b00000111
+    elif piece.lower() == 'u':
+        out = 0b111 & 0b00000000
+    else:
+        raise ValueError("Piece not specified")
+
+    if colour.lower()[0] == 'b':
+        out = out & 0b00000111
+    elif colour.lower()[0] == 'w':
+        out = out | 0b00001000
+    else:
+        raise ValueError("Colour not specified")
+    
+    return out
+
+def process2(screenshot):
+    image = np.array(screenshot)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh_image = cv2.threshold(gray_image, 127, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(thresh_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    board_contour = max(contours, key=cv2.contourArea)
+    x, y, w, h = cv2.boundingRect(board_contour)
+    chessboard = gray_image[y:y+h, x:x+w]
+
+    if h != w:
+        return None
+    
+    square_size = h // 8
+    squares = []
+    
+    for row in range(8):
+        for col in range(8):
+            square = chessboard[row * square_size:(row + 1) * square_size, col * square_size:(col + 1) * square_size]
+            
+            # Resize each square to 64x64 and convert to tensor
+            square_resized = cv2.resize(square, (64, 64))  # Resize to match model input
+            square_resized = np.expand_dims(square_resized, axis=0)  # Add the channel dimension (1 for grayscale)
+            square_tensor = torch.tensor(square_resized, dtype=torch.float32)  # Convert to tensor
+            
+            # Normalize the tensor to be between 0 and 1
+            square_tensor = square_tensor / 255.0
+            squares.append(square_tensor)
+    
+    return squares
+
 
 def translate():
-    data = process(take_screenshot())
+
+
+    labels_map = {
+                               0: 'lbr',    # Light Black Rook
+                               1: 'dbk',    # Dark  Black Knight
+                               2: 'lbb',    # Light Black Bishop
+                               3: 'dbq',    # Dark  Black Queen
+                               4: 'lbK',    # Light Black King
+                               5: 'dbb',    # Dark  Black Bishop
+                               6: 'lbk',    # Light Black Knight
+                               7: 'dbr',    # Dark  Black Rook
+                               8: 'dbp',    # Dark  Black Pawn
+                               9: 'lbp',    # Light Black Pawn
+                               10: 'due',   # Dark  Undef Empty
+                               11: 'lue',   # Light Undef Empty
+                               12: 'dwp',   # Dark  White Pawn
+                               13: 'lwp',   # Light White Pawn
+                               14: 'dwr',   # Dark  White Rook
+                               15: 'lwk',   # Light White Knight
+                               16: 'dwb',   # Dark  White Bishop
+                               17: 'lwq',   # Light White Queen
+                               18: 'dwK',   # Dark  White King
+                               19: 'lwb',   # Light White Bishop
+                               20: 'dwk',   # Dark  White Knight
+                               21: 'lwr',   # Light White Rook
+                               22: 'dbK',   # Dark  Black King
+                               23: 'lwK',   # Light White King
+                               24: 'lbq',   # Light Black Queen
+                               25: 'dwq'}   # Dark  White Queen
+
+    model = NeuralNetwork()
+    model.load_state_dict(torch.load(DIR_PATH + "/" + "model.pth"))
+    model.eval()
+
+    input("Press any input to continue. Make sure you have a chess game open on your primary window: ")
+
+    # Process the screenshot to get individual squares
+    data = process(take_screenshot(save=False))
+
+    if data is not None and len(data) == 64:  # Ensure we have 64 squares to process
+        for idx, square in enumerate(data):
+            square_tensor = torch.tensor(square, dtype=torch.float32)
+            resize_transform = transforms.Compose([
+                transforms.ToPILImage(),  # Convert numpy array to PIL image
+                transforms.Resize((64, 64))  # Resize to 64x64
+            ])
+            square_tensor = resize_transform(square_tensor)
+            square_tensor = transforms.ToTensor()(square_tensor).unsqueeze(0)  # Add batch dimension
+            square_tensor = square_tensor.squeeze(0)  # Remove the batch dimension
+            square_tensor = square_tensor.unsqueeze(0)  # Add the batch dimension back
+            with torch.no_grad():
+                output = model(square_tensor)  # Feed the individual square through the model
+            predicted_label = torch.argmax(output, dim=1)  # Get the predicted label
+            print(f"Square {idx} predicted label: {labels_map[predicted_label.item()]}")  # Print the prediction for each square
+    else:
+        print("Error: No valid chessboard found.")
 
 if __name__ == '__main__':
-    train()
-
+    #train()
+    translate()
 
 
