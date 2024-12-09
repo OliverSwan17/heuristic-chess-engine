@@ -14,7 +14,8 @@ int main(int argc, char* argv[]) {
     // State
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     uint8_t turn = WHITE;
-    
+    uint8_t checkmate = 0;
+
     #ifdef NETWORKING
     #ifdef _WIN32
     WSADATA wsaData;
@@ -111,13 +112,27 @@ int main(int argc, char* argv[]) {
                             }
 
                             turn = turn ^ 1;
-
+                            
                             #ifdef NETWORKING
                             #ifdef _WIN32
                             SetEvent(hEvent);
                             #endif
                             #endif
-                            
+
+                            // Checking for checkmate. 
+                            for (int i = 0; i < 64; i++){
+                                checkmate = 1;
+                                if (COLOUR(board[i]) == turn && board[i] != EMPTY){
+                                    if(getLegalMoves(board, i) != 0){
+                                        checkmate = 0;
+                                        break;
+                                    }
+                                }
+                            }
+                        
+                            if (checkmate)
+                                printf("Checkmate!");
+
                         }else{
                             selectorSelectionIndex = srcSelectionIndex;
                         }
