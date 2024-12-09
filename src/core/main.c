@@ -11,8 +11,10 @@ struct sockaddr_in server_addr;
 #endif
 
 int main(int argc, char* argv[]) {
+    // State
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-
+    uint8_t turn = WHITE;
+    
     #ifdef NETWORKING
     #ifdef _WIN32
     WSADATA wsaData;
@@ -80,13 +82,19 @@ int main(int argc, char* argv[]) {
                 case SDL_MOUSEBUTTONDOWN:
                     if(e.button.button == SDL_BUTTON_LEFT) {
                         srcSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                        if (COLOUR(board[srcSelectionIndex]) != turn || board[srcSelectionIndex] == EMPTY){
+                            highlightedSquares = 0;
+                            break;
+                        }
+                            
+
                         selectorSelectionIndex = srcSelectionIndex;
                         highlightedSquares = getLegalMoves(board, srcSelectionIndex);
                         selectorState = 0;
                     }else if(e.button.button == SDL_BUTTON_RIGHT){
                         if (selectorState == 1)
                             break;
-
+                        
                         selectorSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
                         uint64_t legalSquares = getLegalMoves(board, srcSelectionIndex);
                         if (legalSquares & (1ULL << selectorSelectionIndex)){
@@ -101,6 +109,8 @@ int main(int argc, char* argv[]) {
                                 else
                                     board[selectorSelectionIndex] = B_QUEEN;
                             }
+
+                            turn = turn ^ 1;
 
                             #ifdef NETWORKING
                             #ifdef _WIN32
