@@ -12,9 +12,10 @@ struct sockaddr_in server_addr;
 
 int main(int argc, char* argv[]) {
     // State
-    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+    // rnbqkbnr/pppppppp/8/8/8/8/8/4K3
+    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/8/P3K3");
     uint8_t turn = WHITE;
-    uint8_t checkmate = 0;
 
     #ifdef NETWORKING
     #ifdef _WIN32
@@ -111,28 +112,33 @@ int main(int argc, char* argv[]) {
                                     board[selectorSelectionIndex] = B_QUEEN;
                             }
 
-                            turn = turn ^ 1;
-                            
                             #ifdef NETWORKING
                             #ifdef _WIN32
                             SetEvent(hEvent);
                             #endif
                             #endif
 
-                            // Checking for checkmate. 
+                            // Calculating the current colours attacking squares
+                            uint64_t attackingSquares = getColourLegalMoves(board, turn);
+                            
+                            // Switching the turn to the other coulour
+                            turn = turn ^ 1;
+                            
+                            // Search for the other colours king and checks if it has no moves.
+                            // If the king has no moves, check if it is under attack for checkmate
+                            // and check if there are no other moves (stalemate).
                             for (int i = 0; i < 64; i++){
-                                checkmate = 1;
-                                if (COLOUR(board[i]) == turn && board[i] != EMPTY){
-                                    if(getLegalMoves(board, i) != 0){
-                                        checkmate = 0;
-                                        break;
+                                if (KING == (board[i] & 0b111) && COLOUR(board[i]) == turn){
+                                    if (getLegalMoves(board, i) == 0){
+                                        if (attackingSquares & (1ULL << i)){
+                                            printf("Checkmate!\n");
+                                        }else if (getColourLegalMoves(board, turn) == 0){
+                                            printf("Stalemate!\n");
+                                        }
                                     }
                                 }
                             }
                         
-                            if (checkmate)
-                                printf("Checkmate!");
-
                         }else{
                             selectorSelectionIndex = srcSelectionIndex;
                         }

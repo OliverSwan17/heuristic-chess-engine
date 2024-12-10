@@ -1,5 +1,15 @@
 #include "chess.h"
 
+uint64_t getColourLegalMoves(uint8_t* board, uint8_t colour){
+    uint64_t moves = 0;
+    for (int i = 0; i < 64; i++){
+        if(COLOUR(board[i]) == colour)
+            moves |= getLegalMoves(board, i);
+    }
+
+    return moves;
+}
+
 uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
     if ((piece & 0b111) == PAWN)
