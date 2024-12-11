@@ -94,8 +94,11 @@ int main(int argc, char* argv[]) {
                         highlightedSquares = getLegalMoves(board, srcSelectionIndex);
 
                         // Check for castle
-                        uint64_t castlingSquares = getCastlingSquares(board, turn);
-                        highlightedSquares |= castlingSquares;
+                        if ((KING == (board[srcSelectionIndex] & 0b111)) && COLOUR(board[srcSelectionIndex]) == turn){
+                            uint64_t oppositeColourTargetSquares = getColourTargetSquares(board, !turn);
+                            uint64_t castlingSquares = getCastlingSquares(board, turn, oppositeColourTargetSquares);
+                            highlightedSquares |= castlingSquares;
+                        }
 
                         selectorState = 0;
                     }else if(e.button.button == SDL_BUTTON_RIGHT){
