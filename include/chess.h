@@ -92,6 +92,7 @@ uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex);
 uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour);
 uint64_t getColourLegalMoves(uint8_t* board, uint8_t colour);
+uint64_t getCastlingSquares(uint8_t* board, uint8_t colour);
 
 //Lookup Tables
 void generateKnightLookupTable();

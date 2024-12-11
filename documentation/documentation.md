@@ -29,6 +29,13 @@ The fourth bit indicates the piece colour.
 |`0XXX`|Black|
 |`1XXX`|White|
 
+The fifth bit is used by the rooks and kings to indicate if they have moved yet. This is used to check for castling rights.
+
+|Value|State|
+|-----|------|
+|`1XXXX`|Has Moved|
+|`0XXXX`|Hasn't Moved|
+
 The remaining four bits could potentially be used to indicate if en-passant is available and if the king has moved, the rook has moved etc.
 
 There is a macro defined in `chess.h` which is used to calculate the colour of a piece. If positive, the piece is white and if zero the piece is black. This is calculated through simply checking if the fourth bit is set using a bitmask.

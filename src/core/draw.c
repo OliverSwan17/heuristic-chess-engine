@@ -71,7 +71,7 @@ void drawPieces(SDL_Renderer* renderer, uint8_t* board, int rotation) {
             // For example, the 7th piece on the spritesheet is the white pawn but a white pawn is represented by 9.
             // So we subtract by 2. This works for all of the white pieces. 
 
-            int spriteOffset = board[y * 8 + x] - 1 + ((board[y * 8 + x] & (1 << 3)) ? -2 : 0);
+            int spriteOffset = (board[y * 8 + x] & 0b1111) - 1 + (((board[y * 8 + x] & 0b1111) & (1 << 3)) ? -2 : 0);
             SDL_Rect destinationRect = {x * SQUARE_SIZE, y * SQUARE_SIZE, 100, 100};
             SDL_RenderCopy(renderer, piecesTexture, piecesRects[spriteOffset], &destinationRect);
         }

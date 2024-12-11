@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     // State
     // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
     // rnbqkbnr/pppppppp/8/8/8/8/8/4K3
-    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/8/P3K3");
+    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     uint8_t turn = WHITE;
 
     #ifdef NETWORKING
@@ -92,6 +92,11 @@ int main(int argc, char* argv[]) {
 
                         selectorSelectionIndex = srcSelectionIndex;
                         highlightedSquares = getLegalMoves(board, srcSelectionIndex);
+
+                        // Check for castle
+                        uint64_t castlingSquares = getCastlingSquares(board, turn);
+                        highlightedSquares |= castlingSquares;
+
                         selectorState = 0;
                     }else if(e.button.button == SDL_BUTTON_RIGHT){
                         if (selectorState == 1)
@@ -118,6 +123,12 @@ int main(int argc, char* argv[]) {
                             #endif
                             #endif
 
+                            if ((ROOK == (board[selectorSelectionIndex] & 0b111)) || (KING == (board[selectorSelectionIndex] & 0b111))){
+                                // Setting the 5th bit to indicate that the piece has been moved.
+                                printf("King or rook move!\n");
+                                board[selectorSelectionIndex] |= 1ULL << 5;
+                            }
+
                             // Calculating the current colours attacking squares
                             uint64_t attackingSquares = getColourLegalMoves(board, turn);
                             
@@ -138,7 +149,7 @@ int main(int argc, char* argv[]) {
                                     }
                                 }
                             }
-                        
+
                         }else{
                             selectorSelectionIndex = srcSelectionIndex;
                         }
