@@ -16,6 +16,7 @@ int main(int argc, char* argv[]) {
     // rnbqkbnr/pppppppp/8/8/8/8/8/4K3
     uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     uint8_t turn = WHITE;
+    uint64_t castlingSquares = 0;
 
     #ifdef NETWORKING
     #ifdef _WIN32
@@ -83,6 +84,7 @@ int main(int argc, char* argv[]) {
                     }
                 case SDL_MOUSEBUTTONDOWN:
                     if(e.button.button == SDL_BUTTON_LEFT) {
+                        castlingSquares = 0;
                         srcSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
                         if (COLOUR(board[srcSelectionIndex]) != turn || board[srcSelectionIndex] == EMPTY){
                             highlightedSquares = 0;
@@ -96,7 +98,7 @@ int main(int argc, char* argv[]) {
                         // Check for castle
                         if ((KING == (board[srcSelectionIndex] & 0b111)) && COLOUR(board[srcSelectionIndex]) == turn){
                             uint64_t oppositeColourTargetSquares = getColourTargetSquares(board, !turn);
-                            uint64_t castlingSquares = getCastlingSquares(board, turn, oppositeColourTargetSquares);
+                            castlingSquares = getCastlingSquares(board, turn, oppositeColourTargetSquares);
                             highlightedSquares |= castlingSquares;
                         }
 
@@ -107,18 +109,34 @@ int main(int argc, char* argv[]) {
                         
                         selectorSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
                         uint64_t legalSquares = getLegalMoves(board, srcSelectionIndex);
-                        if (legalSquares & (1ULL << selectorSelectionIndex)){
+                        if ((legalSquares & (1ULL << selectorSelectionIndex)) || castlingSquares){
                             highlightedSquares = 0;
                             selectorState = 1;
-                            board[selectorSelectionIndex] = board[srcSelectionIndex];
-                            board[srcSelectionIndex] = EMPTY;
-
+                            
                             if (((board[selectorSelectionIndex] & 0b111) == PAWN) && (RANK(selectorSelectionIndex) == 1 || RANK(selectorSelectionIndex) == 8)){
                                 if(COLOUR(board[selectorSelectionIndex]) == WHITE)
                                     board[selectorSelectionIndex] = W_QUEEN;
                                 else
                                     board[selectorSelectionIndex] = B_QUEEN;
                             }
+
+                            if (castlingSquares){ // Castling
+                                if (turn == WHITE){
+                                    if ((castlingSquares & (1ULL << selectorSelectionIndex)) && srcSelectionIndex == 60){
+                                        board[selectorSelectionIndex] = board[60];
+                                        board[srcSelectionIndex] = EMPTY;
+                                        board[61] = board[63];
+                                        board[63] = EMPTY;
+                                    }
+                                }else{
+
+                                }
+                            }else{ // Normal move
+                                board[selectorSelectionIndex] = board[srcSelectionIndex];
+                                board[srcSelectionIndex] = EMPTY;
+                            }
+
+                            
 
                             #ifdef NETWORKING
                             #ifdef _WIN32
@@ -128,7 +146,6 @@ int main(int argc, char* argv[]) {
 
                             if ((ROOK == (board[selectorSelectionIndex] & 0b111)) || (KING == (board[selectorSelectionIndex] & 0b111))){
                                 // Setting the 5th bit to indicate that the piece has been moved.
-                                printf("King or rook move!\n");
                                 board[selectorSelectionIndex] |= 1ULL << 5;
                             }
 
@@ -146,8 +163,10 @@ int main(int argc, char* argv[]) {
                                     if (getLegalMoves(board, i) == 0){
                                         if (attackingSquares & (1ULL << i)){
                                             printf("Checkmate!\n");
+                                            goto end;
                                         }else if (getColourLegalMoves(board, turn) == 0){
                                             printf("Stalemate!\n");
+                                            goto end;
                                         }
                                     }
                                 }
@@ -179,6 +198,7 @@ int main(int argc, char* argv[]) {
     #endif
     #endif
 
+    end:
     SDL_DestroyWindow(window);
     SDL_Quit();
     free(board);
