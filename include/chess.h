@@ -59,6 +59,8 @@
 
 //Main
 int handleEvents(SDL_Event e);
+int handleSelection(SDL_Event e);
+int handleCapture(SDL_Event e);
 
 //Fen
 uint8_t* fenToArray(char* fen);
