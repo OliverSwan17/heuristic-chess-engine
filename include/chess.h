@@ -57,6 +57,9 @@
 #define SCREEN_HEIGHT (800)
 #define SQUARE_SIZE (SCREEN_LENGTH / 8)
 
+//Main
+int handleEvents(SDL_Event e);
+
 //Fen
 uint8_t* fenToArray(char* fen);
 #define B_PAWN 1

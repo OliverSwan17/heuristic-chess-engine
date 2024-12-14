@@ -10,13 +10,26 @@ int client_sock;
 struct sockaddr_in server_addr;
 #endif
 
+static uint8_t* board;
+static uint8_t turn;
+static uint64_t castlingSquares;
+
+static uint64_t highlightedSquares;
+static uint8_t srcSelectionIndex;
+static uint8_t selectorSelectionIndex;
+static uint8_t selectorState;
+
 int main(int argc, char* argv[]) {
-    // State
+    board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    turn = WHITE;
+    castlingSquares = 0;
+
+    highlightedSquares = 0;
+    srcSelectionIndex = 0;
+    selectorSelectionIndex = 0;
+    selectorState = 0;
     // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
     // rnbqkbnr/pppppppp/8/8/8/8/8/4K3
-    uint8_t* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    uint8_t turn = WHITE;
-    uint64_t castlingSquares = 0;
 
     #ifdef NETWORKING
     #ifdef _WIN32
@@ -51,10 +64,10 @@ int main(int argc, char* argv[]) {
     #endif
 
     generateKnightLookupTable();
-    uint64_t highlightedSquares = 0;
-    uint8_t srcSelectionIndex = 0;
-    uint8_t selectorSelectionIndex = 0;
-    uint8_t selectorState = 0;
+    highlightedSquares = 0;
+    srcSelectionIndex = 0;
+    selectorSelectionIndex = 0;
+    selectorState = 0;
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -67,117 +80,11 @@ int main(int argc, char* argv[]) {
     initSelector(renderer);
 
     SDL_Event e;
-    int quit = 0;
-
-    while(!quit) {
+    
+    while(1) {
         while (SDL_PollEvent(&e) != 0) {
-            switch (e.type) {
-                case SDL_QUIT:
-                    quit = 1;
-                    break;
-                case SDL_KEYDOWN:
-                    if(e.type == SDL_KEYDOWN) {
-                        if (e.key.keysym.sym == SDLK_ESCAPE) {
-                            quit = 1;
-                            break;
-                        }
-                    }
-                case SDL_MOUSEBUTTONDOWN:
-                    if(e.button.button == SDL_BUTTON_LEFT) {
-                        castlingSquares = 0;
-                        srcSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                        if (COLOUR(board[srcSelectionIndex]) != turn || board[srcSelectionIndex] == EMPTY){
-                            highlightedSquares = 0;
-                            break;
-                        }
-                            
-
-                        selectorSelectionIndex = srcSelectionIndex;
-                        highlightedSquares = getLegalMoves(board, srcSelectionIndex);
-
-                        // Check for castle
-                        if ((KING == (board[srcSelectionIndex] & 0b111)) && COLOUR(board[srcSelectionIndex]) == turn){
-                            uint64_t oppositeColourTargetSquares = getColourTargetSquares(board, !turn);
-                            castlingSquares = getCastlingSquares(board, turn, oppositeColourTargetSquares);
-                            highlightedSquares |= castlingSquares;
-                        }
-
-                        selectorState = 0;
-                    }else if(e.button.button == SDL_BUTTON_RIGHT){
-                        if (selectorState == 1)
-                            break;
-                        
-                        selectorSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                        uint64_t legalSquares = getLegalMoves(board, srcSelectionIndex);
-                        if ((legalSquares & (1ULL << selectorSelectionIndex)) || castlingSquares){
-                            highlightedSquares = 0;
-                            selectorState = 1;
-                            
-                            if (((board[selectorSelectionIndex] & 0b111) == PAWN) && (RANK(selectorSelectionIndex) == 1 || RANK(selectorSelectionIndex) == 8)){
-                                if(COLOUR(board[selectorSelectionIndex]) == WHITE)
-                                    board[selectorSelectionIndex] = W_QUEEN;
-                                else
-                                    board[selectorSelectionIndex] = B_QUEEN;
-                            }
-
-                            if (castlingSquares){ // Castling
-                                if (turn == WHITE){
-                                    if ((castlingSquares & (1ULL << selectorSelectionIndex)) && srcSelectionIndex == 60){
-                                        board[selectorSelectionIndex] = board[60];
-                                        board[srcSelectionIndex] = EMPTY;
-                                        board[61] = board[63];
-                                        board[63] = EMPTY;
-                                    }
-                                }else{
-
-                                }
-                            }else{ // Normal move
-                                board[selectorSelectionIndex] = board[srcSelectionIndex];
-                                board[srcSelectionIndex] = EMPTY;
-                            }
-
-                            
-
-                            #ifdef NETWORKING
-                            #ifdef _WIN32
-                            SetEvent(hEvent);
-                            #endif
-                            #endif
-
-                            if ((ROOK == (board[selectorSelectionIndex] & 0b111)) || (KING == (board[selectorSelectionIndex] & 0b111))){
-                                // Setting the 5th bit to indicate that the piece has been moved.
-                                board[selectorSelectionIndex] |= 1ULL << 5;
-                            }
-
-                            // Calculating the current colours attacking squares
-                            uint64_t attackingSquares = getColourLegalMoves(board, turn);
-                            
-                            // Switching the turn to the other coulour
-                            turn = turn ^ 1;
-                            
-                            // Search for the other colours king and checks if it has no moves.
-                            // If the king has no moves, check if it is under attack for checkmate
-                            // and check if there are no other moves (stalemate).
-                            for (int i = 0; i < 64; i++){
-                                if (KING == (board[i] & 0b111) && COLOUR(board[i]) == turn){
-                                    if (getLegalMoves(board, i) == 0){
-                                        if (attackingSquares & (1ULL << i)){
-                                            printf("Checkmate!\n");
-                                            goto end;
-                                        }else if (getColourLegalMoves(board, turn) == 0){
-                                            printf("Stalemate!\n");
-                                            goto end;
-                                        }
-                                    }
-                                }
-                            }
-
-                        }else{
-                            selectorSelectionIndex = srcSelectionIndex;
-                        }
-                    }
-                    break;
-            }
+            if(handleEvents(e) == 1)
+                goto end;
         }
 
         SDL_RenderClear(renderer);
@@ -188,6 +95,7 @@ int main(int argc, char* argv[]) {
         SDL_RenderPresent(renderer);
     }
 
+    end:
     #ifdef NETWORKING
     #ifdef _WIN32
     CloseHandle(thread);
@@ -198,7 +106,6 @@ int main(int argc, char* argv[]) {
     #endif
     #endif
 
-    end:
     SDL_DestroyWindow(window);
     SDL_Quit();
     free(board);
@@ -209,4 +116,117 @@ int main(int argc, char* argv[]) {
     printf("ERROR! %s\n", SDL_GetError());
     SDL_Quit();
     return 1;
+}
+
+int handleEvents(SDL_Event e){
+    switch (e.type) {
+        case SDL_QUIT:
+            return 1;
+        case SDL_KEYDOWN:
+            if(e.type == SDL_KEYDOWN) 
+            {
+                if (e.key.keysym.sym == SDLK_ESCAPE) {
+                    return 1;
+                }
+            }
+        case SDL_MOUSEBUTTONDOWN:
+            if(e.button.button == SDL_BUTTON_LEFT) 
+            {
+                castlingSquares = 0;
+                srcSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                if (COLOUR(board[srcSelectionIndex]) != turn || board[srcSelectionIndex] == EMPTY){
+                    highlightedSquares = 0;
+                    break;
+                }
+
+
+                selectorSelectionIndex = srcSelectionIndex;
+                highlightedSquares = getLegalMoves(board, srcSelectionIndex);
+
+                // Check for castle
+                if ((KING == (board[srcSelectionIndex] & 0b111)) && COLOUR(board[srcSelectionIndex]) == turn){
+                    uint64_t oppositeColourTargetSquares = getColourTargetSquares(board, !turn);
+                    castlingSquares = getCastlingSquares(board, turn, oppositeColourTargetSquares);
+                    highlightedSquares |= castlingSquares;
+                }
+
+                selectorState = 0;
+            }
+            else if(e.button.button == SDL_BUTTON_RIGHT)
+            {
+                if (selectorState == 1)
+                    break;
+
+                selectorSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                uint64_t legalSquares = getLegalMoves(board, srcSelectionIndex);
+                if ((legalSquares & (1ULL << selectorSelectionIndex)) || castlingSquares){
+                    highlightedSquares = 0;
+                    selectorState = 1;
+
+                    if (((board[selectorSelectionIndex] & 0b111) == PAWN) && (RANK(selectorSelectionIndex) == 1 || RANK(selectorSelectionIndex) == 8)){
+                        if(COLOUR(board[selectorSelectionIndex]) == WHITE)
+                            board[selectorSelectionIndex] = W_QUEEN;
+                        else
+                            board[selectorSelectionIndex] = B_QUEEN;
+                    }
+
+                    if (castlingSquares){ // Castling
+                        if (turn == WHITE){
+                            if ((castlingSquares & (1ULL << selectorSelectionIndex)) && srcSelectionIndex == 60){
+                                board[selectorSelectionIndex] = board[60];
+                                board[srcSelectionIndex] = EMPTY;
+                                board[61] = board[63];
+                                board[63] = EMPTY;
+                            }
+                        }else{
+
+                        }
+                    }else{ // Normal move
+                        board[selectorSelectionIndex] = board[srcSelectionIndex];
+                        board[srcSelectionIndex] = EMPTY;
+                    }
+
+
+
+                    #ifdef NETWORKING
+                    #ifdef _WIN32
+                    SetEvent(hEvent);
+                    #endif
+                    #endif
+
+                    if ((ROOK == (board[selectorSelectionIndex] & 0b111)) || (KING == (board[selectorSelectionIndex] & 0b111))){
+                        // Setting the 5th bit to indicate that the piece has been moved.
+                        board[selectorSelectionIndex] |= 1ULL << 5;
+                    }
+
+                    // Calculating the current colours attacking squares
+                    uint64_t attackingSquares = getColourLegalMoves(board, turn);
+
+                    // Switching the turn to the other coulour
+                    turn = turn ^ 1;
+
+                    // Search for the other colours king and checks if it has no moves.
+                    // If the king has no moves, check if it is under attack for checkmate
+                    // and check if there are no other moves (stalemate).
+                    for (int i = 0; i < 64; i++){
+                        if (KING == (board[i] & 0b111) && COLOUR(board[i]) == turn){
+                            if (getLegalMoves(board, i) == 0){
+                                if (attackingSquares & (1ULL << i)){
+                                    printf("Checkmate!\n");
+                                    return 1;
+                                }else if (getColourLegalMoves(board, turn) == 0){
+                                    printf("Stalemate!\n");
+                                    return 1;
+                                }
+                            }
+                        }
+                    }
+
+                }else{
+                    selectorSelectionIndex = srcSelectionIndex;
+                }
+            }
+            break;
+    }
+    return 0;
 }
