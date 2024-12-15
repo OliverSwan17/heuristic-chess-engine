@@ -10,26 +10,26 @@ int client_sock;
 struct sockaddr_in server_addr;
 #endif
 
-static uint8_t* board;
-static uint8_t turn;
-static uint64_t castlingSquares;
+static uint8_t selectionIndex;
+static uint8_t captureIndex;
 
 static uint64_t highlightedSquares;
-static uint8_t srcSelectionIndex;
-static uint8_t selectorSelectionIndex;
 static uint8_t selectorState;
 
 int main(int argc, char* argv[]) {
-    board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    turn = WHITE;
-    castlingSquares = 0;
+    generateKnightLookupTable();
+
+    BoardState s;
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    s.turn = WHITE;
+    s.castlingSquares = 0;
+    s.wKingIndex = 0;
+    s.bKingIndex = 0;
 
     highlightedSquares = 0;
-    srcSelectionIndex = 0;
-    selectorSelectionIndex = 0;
+    selectionIndex = 0;
+    captureIndex = 0;
     selectorState = 0;
-    // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
-    // rnbqkbnr/pppppppp/8/8/8/8/8/4K3
 
     #ifdef NETWORKING
     #ifdef _WIN32
@@ -63,12 +63,6 @@ int main(int argc, char* argv[]) {
     #endif
     #endif
 
-    generateKnightLookupTable();
-    highlightedSquares = 0;
-    srcSelectionIndex = 0;
-    selectorSelectionIndex = 0;
-    selectorState = 0;
-    
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL) { goto error;}
@@ -83,15 +77,15 @@ int main(int argc, char* argv[]) {
     
     while(1) {
         while (SDL_PollEvent(&e) != 0) {
-            if(handleEvents(e) == 1)
+            if(handleEvents(e, &s) == 1)
                 goto end;
         }
 
         SDL_RenderClear(renderer);
         drawSquares(renderer);
         drawHighlightedSquares(highlightedSquares, renderer);
-        drawPieces(renderer, board, WHITE_DIRECTION);
-        drawSelector(renderer, selectorSelectionIndex, selectorState);
+        drawPieces(renderer, s.board, WHITE_DIRECTION);
+        drawSelector(renderer, captureIndex, selectorState);
         SDL_RenderPresent(renderer);
     }
 
@@ -108,7 +102,7 @@ int main(int argc, char* argv[]) {
 
     SDL_DestroyWindow(window);
     SDL_Quit();
-    free(board);
+    free(s.board);
     return 0;
 
     error:
@@ -118,7 +112,7 @@ int main(int argc, char* argv[]) {
     return 1;
 }
 
-int handleEvents(SDL_Event e){
+int handleEvents(SDL_Event e, BoardState *s){
     switch (e.type) {
         case SDL_QUIT:
             return 1;
@@ -130,32 +124,32 @@ int handleEvents(SDL_Event e){
             }
         case SDL_MOUSEBUTTONDOWN:
             if (e.button.button == SDL_BUTTON_LEFT){
-                return handleSelection(e);
+                return handleSelection(e, s);
             }
             else if (e.button.button == SDL_BUTTON_RIGHT){
-                return handleCapture(e);
+                return handleCapture(e, s);
             }
             break;
     }
     return 0;
 }
 
-int handleSelection(SDL_Event e){
-    castlingSquares = 0;
-    srcSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-    if (COLOUR(board[srcSelectionIndex]) != turn || board[srcSelectionIndex] == EMPTY){
+int handleSelection(SDL_Event e, BoardState *s){
+    s->castlingSquares = 0;
+    selectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+    if (COLOUR(s->board[selectionIndex]) != s->turn || s->board[selectionIndex] == EMPTY){
         highlightedSquares = 0;
         return 0;
     }
 
-    selectorSelectionIndex = srcSelectionIndex;
-    highlightedSquares = getLegalMoves(board, srcSelectionIndex);
+    captureIndex = selectionIndex;
+    highlightedSquares = getLegalMoves(s->board, selectionIndex);
 
     // Check for castle
-    if ((KING == (board[srcSelectionIndex] & 0b111)) && COLOUR(board[srcSelectionIndex]) == turn){
-        uint64_t oppositeColourTargetSquares = getColourTargetSquares(board, !turn);
-        castlingSquares = getCastlingSquares(board, turn, oppositeColourTargetSquares);
-        highlightedSquares |= castlingSquares;
+    if ((KING == (s->board[selectionIndex] & 0b111)) && COLOUR(s->board[selectionIndex]) == s->turn){
+        uint64_t oppositeColourTargetSquares = getColourTargetSquares(s->board, !s->turn);
+        s->castlingSquares = getCastlingSquares(s->board, s->turn, oppositeColourTargetSquares);
+        highlightedSquares |= s->castlingSquares;
     }
 
     selectorState = 0;
@@ -163,41 +157,41 @@ int handleSelection(SDL_Event e){
     return 0;
 }
 
-int handleCapture(SDL_Event e){
+int handleCapture(SDL_Event e, BoardState *s){
     if (selectorState == 1)
         return 0;
 
-    selectorSelectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-    uint64_t legalSquares = getLegalMoves(board, srcSelectionIndex);
-    if (!((legalSquares & (1ULL << selectorSelectionIndex)) || castlingSquares)){
-        selectorSelectionIndex = srcSelectionIndex;
+    captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+    uint64_t legalSquares = getLegalMoves(s->board, selectionIndex);
+    if (!((legalSquares & (1ULL << captureIndex)) || s->castlingSquares)){
+        captureIndex = selectionIndex;
         return 0;
     }
        
     highlightedSquares = 0;
     selectorState = 1;
 
-    if (((board[selectorSelectionIndex] & 0b111) == PAWN) && (RANK(selectorSelectionIndex) == 1 || RANK(selectorSelectionIndex) == 8)){
-        if(COLOUR(board[selectorSelectionIndex]) == WHITE)
-            board[selectorSelectionIndex] = W_QUEEN;
+    if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
+        if(COLOUR(s->board[captureIndex]) == WHITE)
+            s->board[captureIndex] = W_QUEEN;
         else
-            board[selectorSelectionIndex] = B_QUEEN;
+            s->board[captureIndex] = B_QUEEN;
     }
 
-    if (castlingSquares){ // Castling
-        if (turn == WHITE){
-            if ((castlingSquares & (1ULL << selectorSelectionIndex)) && srcSelectionIndex == 60){
-                board[selectorSelectionIndex] = board[60];
-                board[srcSelectionIndex] = EMPTY;
-                board[61] = board[63];
-                board[63] = EMPTY;
+    if (s->castlingSquares){ // Castling
+        if (s->turn == WHITE){
+            if ((s->castlingSquares & (1ULL << captureIndex)) && selectionIndex == 60){
+                s->board[captureIndex] = s->board[60];
+                s->board[selectionIndex] = EMPTY;
+                s->board[61] = s->board[63];
+                s->board[63] = EMPTY;
             }
         }else{
 
         }
     }else{ // Normal move
-        board[selectorSelectionIndex] = board[srcSelectionIndex];
-        board[srcSelectionIndex] = EMPTY;
+        s->board[captureIndex] = s->board[selectionIndex];
+        s->board[selectionIndex] = EMPTY;
     }
 
     #ifdef NETWORKING
@@ -206,27 +200,27 @@ int handleCapture(SDL_Event e){
     #endif
     #endif
 
-    if ((ROOK == (board[selectorSelectionIndex] & 0b111)) || (KING == (board[selectorSelectionIndex] & 0b111))){
+    if ((ROOK == (s->board[captureIndex] & 0b111)) || (KING == (s->board[captureIndex] & 0b111))){
         // Setting the 5th bit to indicate that the piece has been moved.
-        board[selectorSelectionIndex] |= 1ULL << 5;
+        s->board[captureIndex] |= 1ULL << 5;
     }
 
     // Calculating the current colours attacking squares
-    uint64_t attackingSquares = getColourLegalMoves(board, turn);
+    uint64_t attackingSquares = getColourLegalMoves(s->board, s->turn);
 
     // Switching the turn to the other coulour
-    turn = turn ^ 1;
+    s->turn = s->turn ^ 1;
 
     // Search for the other colours king and checks if it has no moves.
     // If the king has no moves, check if it is under attack for checkmate
     // and check if there are no other moves (stalemate).
     for (int i = 0; i < 64; i++){
-        if (KING == (board[i] & 0b111) && COLOUR(board[i]) == turn){
-            if (getLegalMoves(board, i) == 0){
+        if (KING == (s->board[i] & 0b111) && COLOUR(s->board[i]) == s->turn){
+            if (getLegalMoves(s->board, i) == 0){
                 if (attackingSquares & (1ULL << i)){
                     printf("Checkmate!\n");
                     return 1;
-                }else if (getColourLegalMoves(board, turn) == 0){
+                }else if (getColourLegalMoves(s->board, s->turn) == 0){
                     printf("Stalemate!\n");
                     return 1;
                 }

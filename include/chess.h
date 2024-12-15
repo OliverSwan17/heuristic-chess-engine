@@ -58,9 +58,17 @@
 #define SQUARE_SIZE (SCREEN_LENGTH / 8)
 
 //Main
-int handleEvents(SDL_Event e);
-int handleSelection(SDL_Event e);
-int handleCapture(SDL_Event e);
+typedef struct {
+    uint8_t* board;
+    uint8_t turn;
+    uint64_t castlingSquares;
+    uint8_t wKingIndex;
+    uint8_t bKingIndex;
+} BoardState;
+
+int handleEvents(SDL_Event e, BoardState *s);
+int handleSelection(SDL_Event e, BoardState *s);
+int handleCapture(SDL_Event e, BoardState *s);
 
 //Fen
 uint8_t* fenToArray(char* fen);
