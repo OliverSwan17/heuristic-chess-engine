@@ -12,7 +12,6 @@ struct sockaddr_in server_addr;
 
 static uint8_t selectionIndex;
 static uint8_t captureIndex;
-
 static uint64_t highlightedSquares;
 static uint8_t selectorState;
 
@@ -20,11 +19,12 @@ int main(int argc, char* argv[]) {
     generateKnightLookupTable();
 
     BoardState s;
-    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/8/4K2R");
     s.turn = WHITE;
     s.castlingSquares = 0;
-    s.wKingIndex = 0;
-    s.bKingIndex = 0;
+    s.wKingIndex = 60;
+    s.bKingIndex = 4;
 
     highlightedSquares = 0;
     selectionIndex = 0;
@@ -171,14 +171,8 @@ int handleCapture(SDL_Event e, BoardState *s){
     highlightedSquares = 0;
     selectorState = 1;
 
-    if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
-        if(COLOUR(s->board[captureIndex]) == WHITE)
-            s->board[captureIndex] = W_QUEEN;
-        else
-            s->board[captureIndex] = B_QUEEN;
-    }
-
-    if (s->castlingSquares){ // Castling
+    // Castling
+    if (s->castlingSquares){
         if (s->turn == WHITE){
             if ((s->castlingSquares & (1ULL << captureIndex)) && selectionIndex == 60){
                 s->board[captureIndex] = s->board[60];
@@ -194,39 +188,53 @@ int handleCapture(SDL_Event e, BoardState *s){
         s->board[selectionIndex] = EMPTY;
     }
 
+    // Checking for promotion
+    if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
+        if(COLOUR(s->board[captureIndex]) == WHITE)
+            s->board[captureIndex] = W_QUEEN;
+        else
+            s->board[captureIndex] = B_QUEEN;
+    }
+
     #ifdef NETWORKING
     #ifdef _WIN32
     SetEvent(hEvent);
     #endif
     #endif
 
+    // If the rook just moved, set the 5th bit to indicate that the piece has been moved
     if ((ROOK == (s->board[captureIndex] & 0b111)) || (KING == (s->board[captureIndex] & 0b111))){
-        // Setting the 5th bit to indicate that the piece has been moved.
         s->board[captureIndex] |= 1ULL << 5;
+    }
+    
+    // Updating the King indexs in the boardstate
+    if (KING == (s->board[captureIndex] & 0b111)){
+        if (s->turn == WHITE)
+            s->wKingIndex = captureIndex;
+        else
+            s->bKingIndex = captureIndex;
     }
 
     // Calculating the current colours attacking squares
     uint64_t attackingSquares = getColourLegalMoves(s->board, s->turn);
 
-    // Switching the turn to the other coulour
-    s->turn = s->turn ^ 1;
+    // If the king opposite king has no moves, check if it is under attack for checkmate
+    // else check if there are no legal moves for stalemate.
 
-    // Search for the other colours king and checks if it has no moves.
-    // If the king has no moves, check if it is under attack for checkmate
-    // and check if there are no other moves (stalemate).
-    for (int i = 0; i < 64; i++){
-        if (KING == (s->board[i] & 0b111) && COLOUR(s->board[i]) == s->turn){
-            if (getLegalMoves(s->board, i) == 0){
-                if (attackingSquares & (1ULL << i)){
-                    printf("Checkmate!\n");
-                    return 1;
-                }else if (getColourLegalMoves(s->board, s->turn) == 0){
-                    printf("Stalemate!\n");
-                    return 1;
-                }
-            }
+    // This switch helps to check for stalemate and checkmate.
+    // It also switches the turn as the checkmate / stalemate is the last check in this function.
+    s->turn = s->turn ^ 1;
+    uint8_t tempKingIndex = s->turn ? s->wKingIndex : s->bKingIndex;
+    
+    if (getLegalMoves(s->board, tempKingIndex) == 0) {
+        if (attackingSquares & (1ULL << tempKingIndex)){
+            printf("Checkmate!\n");
+            return 1;
+        }else if (getColourLegalMoves(s->board, s->turn) == 0){
+            printf("Stalemate!\n");
+            return 1;
         }
     }
-
+        
     return 0;
 }
