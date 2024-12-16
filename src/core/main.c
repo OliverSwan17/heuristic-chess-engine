@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 
     BoardState s;
     //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/8/4K2R");
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/8/R3K2R");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
@@ -163,24 +163,32 @@ int handleMove(SDL_Event e, BoardState *s){
 
     captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
     uint64_t legalSquares = getLegalMoves(s->board, selectionIndex);
-    if (!((legalSquares & (1ULL << captureIndex)) || s->castlingSquares)){
+
+    // First check for castling
+    if ((s->castlingSquares) && (s->castlingSquares & (1ULL << captureIndex))){
+        if (s->turn == WHITE && selectionIndex == 60){
+            if (captureIndex == 62){
+                s->board[captureIndex] = s->board[60];
+                s->board[selectionIndex] = EMPTY;
+                s->board[61] = s->board[63];
+                s->board[63] = EMPTY;
+            }else if (captureIndex == 58){
+                s->board[captureIndex] = s->board[60];
+                s->board[selectionIndex] = EMPTY;
+                s->board[59] = s->board[56];
+                s->board[56] = EMPTY;
+            }
+        }
+    }else if (!((legalSquares & (1ULL << captureIndex)))){
         captureIndex = selectionIndex;
         return 0;
-    }
-       
-    highlightedSquares = 0;
-    selectorState = 1;
-
-    // Castling
-    if ((s->castlingSquares) && (s->turn == WHITE) && ((s->castlingSquares & (1ULL << captureIndex)) && selectionIndex == 60)){
-        s->board[captureIndex] = s->board[60];
-        s->board[selectionIndex] = EMPTY;
-        s->board[61] = s->board[63];
-        s->board[63] = EMPTY;
     }else{ // Normal move
         s->board[captureIndex] = s->board[selectionIndex];
         s->board[selectionIndex] = EMPTY;
     }
+
+    highlightedSquares = 0;
+    selectorState = 1;
 
     // Checking for promotion
     if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){

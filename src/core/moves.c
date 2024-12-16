@@ -363,18 +363,20 @@ uint64_t getCastlingSquares(uint8_t* board, uint8_t colour, uint64_t attackedSqu
     uint64_t castlingSquares = 0;
     if (colour == BLACK){
 
-
-
         return castlingSquares;
     }
-
-    if ((KING == (board[60] & 0b111)) && (COLOUR(board[60]) == WHITE) && (!(board[60] & (1 << 5)))){
-        if ((ROOK == (board[63] & 0b111)) && (COLOUR(board[63]) == WHITE) && (!(board[63] & (1 << 5))))
-            if (board[61] == EMPTY && board[62] == EMPTY)
-                if (!(attackedSquares & ((1ULL << 60) | (1ULL << 61) | (1ULL << 62))))
-                    castlingSquares |= (1ULL << 62);
-    }
     
+    if ((KING == (board[60] & 0b111)) && (COLOUR(board[60]) == WHITE) && (!(board[60] & (1 << 5)))){ // Checks for King
+        if ((ROOK == (board[63] & 0b111)) && (COLOUR(board[63]) == WHITE) && (!(board[63] & (1 << 5)))){// Checks kingside rook
+            if (board[61] == EMPTY && board[62] == EMPTY) // Checks if there is empty space inbetween the King and kingside rook
+                if (!(attackedSquares & ((1ULL << 60) | (1ULL << 61) | (1ULL << 62)))) // Checks if castle is legal.
+                    castlingSquares |= (1ULL << 62);
+        }
+        if ((ROOK == (board[56] & 0b111)) && (COLOUR(board[56]) == WHITE) && (!(board[56] & (1 << 5)))) // Checks queenside rook
+            if (board[57] == EMPTY && board[58] == EMPTY && board[59] == EMPTY) // Checks if there is empty space inbetween the King and queenside rook
+                if (!(attackedSquares & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59) | (1ULL << 60)))) // Checks if castle is legal.
+                    castlingSquares |= (1ULL << 58);
+    }
+
     return castlingSquares;
 }
-
