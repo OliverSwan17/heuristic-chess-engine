@@ -127,7 +127,7 @@ int handleEvents(SDL_Event e, BoardState *s){
                 return handleSelection(e, s);
             }
             else if (e.button.button == SDL_BUTTON_RIGHT){
-                return handleCapture(e, s);
+                return handleMove(e, s);
             }
             break;
     }
@@ -157,7 +157,7 @@ int handleSelection(SDL_Event e, BoardState *s){
     return 0;
 }
 
-int handleCapture(SDL_Event e, BoardState *s){
+int handleMove(SDL_Event e, BoardState *s){
     if (selectorState == 1)
         return 0;
 
@@ -172,17 +172,11 @@ int handleCapture(SDL_Event e, BoardState *s){
     selectorState = 1;
 
     // Castling
-    if (s->castlingSquares){
-        if (s->turn == WHITE){
-            if ((s->castlingSquares & (1ULL << captureIndex)) && selectionIndex == 60){
-                s->board[captureIndex] = s->board[60];
-                s->board[selectionIndex] = EMPTY;
-                s->board[61] = s->board[63];
-                s->board[63] = EMPTY;
-            }
-        }else{
-
-        }
+    if ((s->castlingSquares) && (s->turn == WHITE) && ((s->castlingSquares & (1ULL << captureIndex)) && selectionIndex == 60)){
+        s->board[captureIndex] = s->board[60];
+        s->board[selectionIndex] = EMPTY;
+        s->board[61] = s->board[63];
+        s->board[63] = EMPTY;
     }else{ // Normal move
         s->board[captureIndex] = s->board[selectionIndex];
         s->board[selectionIndex] = EMPTY;

@@ -68,7 +68,7 @@ typedef struct {
 
 int handleEvents(SDL_Event e, BoardState *s);
 int handleSelection(SDL_Event e, BoardState *s);
-int handleCapture(SDL_Event e, BoardState *s);
+int handleMove(SDL_Event e, BoardState *s);
 
 //Fen
 uint8_t* fenToArray(char* fen);
