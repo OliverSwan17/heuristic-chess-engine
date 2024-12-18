@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
     generateKnightLookupTable();
 
     BoardState s;
-    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/8/R3K2R");
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("rp2kpqr/8/8/8/8/8/8/RP2KPQR");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
@@ -178,6 +178,18 @@ int handleMove(SDL_Event e, BoardState *s){
                 s->board[59] = s->board[56];
                 s->board[56] = EMPTY;
             }
+        }else if (s->turn == BLACK && selectionIndex == 4){
+            if (captureIndex == 6){
+                s->board[captureIndex] = s->board[4];
+                s->board[selectionIndex] = EMPTY;
+                s->board[5] = s->board[7];
+                s->board[7] = EMPTY;
+            }else if (captureIndex == 2){
+                s->board[captureIndex] = s->board[4];
+                s->board[selectionIndex] = EMPTY;
+                s->board[3] = s->board[0];
+                s->board[0] = EMPTY;
+            }
         }
     }else if (!((legalSquares & (1ULL << captureIndex)))){
         captureIndex = selectionIndex;
@@ -230,6 +242,7 @@ int handleMove(SDL_Event e, BoardState *s){
     
     if (getLegalMoves(s->board, tempKingIndex) == 0) {
         if (attackingSquares & (1ULL << tempKingIndex)){
+            // Need to check for blocks / recaptures here.
             printf("Checkmate!\n");
             return 1;
         }else if (getColourLegalMoves(s->board, s->turn) == 0){
