@@ -242,25 +242,8 @@ int handleMove(SDL_Event e, BoardState *s){
     
     if (getLegalMoves(s->board, tempKingIndex) == 0) {
         if (attackingSquares & (1ULL << tempKingIndex)){
-            // Need to check for blocks / recaptures here.
-            for (int i = 0; i < 64; i++){
-                if (COLOUR(s->board[i]) == s->turn && !(KING == (s->board[i] & 0b111))){
-                    uint64_t moves = getTargetSquares(s->board, i);
-                    
-                    for (int j = 0; j < 64; j++){
-                        if (moves & (1ULL << j)){
-                            uint8_t tempBoard[64];
-                            memcpy(tempBoard, s->board, 64);
-                            tempBoard[j] = s->board[i];
-                            tempBoard[i] = EMPTY;
-
-                            uint64_t newTargetSquares = getColourTargetSquares(((uint8_t *) &tempBoard), s->turn ^ 1);
-                            if (!(newTargetSquares & (1ULL << tempKingIndex)))
-                                return 0;
-                        }
-                    }
-                }  
-            }
+            if (getColourLegalMoves(s->board, s->turn))
+                return 0;
 
             printf("Checkmate!\n");
             return 1;
