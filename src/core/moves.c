@@ -94,6 +94,9 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
             if(COLOUR(board[sinistralSquare]) != pieceColour)
                 pawnSquares |= (1ULL << sinistralSquare);
         }
+
+        if (board[SINISTRAL_SQAURE(pieceIndex, direction)] & 0b100000)
+           pawnSquares |= (1ULL << sinistralSquare);
     }
 
     if ((pieceIndex % 8 != 0 && pieceColour == BLACK)  || ((pieceIndex + 1) % 8 != 0 && pieceColour == WHITE)){
@@ -102,6 +105,9 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
             if(COLOUR(board[dextralSquare]) != pieceColour)
                 pawnSquares |= (1ULL << dextralSquare);
         }
+
+        if (board[DEXTRAL_SQUARE(pieceIndex, direction)] & 0b100000)
+            pawnSquares |= (1ULL << dextralSquare);
     }
 
     if (IS_EMPTY(board[anteriorSquare])){

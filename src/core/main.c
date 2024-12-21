@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
     generateKnightLookupTable();
 
     BoardState s;
-    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    s.board = fenToArray("rp2kpqr/8/8/8/8/8/8/RP2KPQR");
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("rp2kpqr/8/8/8/8/8/8/RP2KPQR");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
@@ -161,6 +161,12 @@ int handleMove(SDL_Event e, BoardState *s){
     if (selectorState == 1)
         return 0;
 
+    // Clearing the en passant bits
+    for (int i = 0; i < 64; i++){
+        if ((PAWN == (s->board[i] & 0b111)) && COLOUR(s->board[i]) == s->turn)
+            s->board[i] &= ~0b00100000;
+    }
+
     captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
     uint64_t legalSquares = getLegalMoves(s->board, selectionIndex);
 
@@ -194,7 +200,18 @@ int handleMove(SDL_Event e, BoardState *s){
     }else if (!((legalSquares & (1ULL << captureIndex)))){
         captureIndex = selectionIndex;
         return 0;
-    }else{ // Normal move
+    }else if ((PAWN == (s->board[selectionIndex] & 0b111)) && (FILE(selectionIndex) != FILE(captureIndex)) && (s->board[captureIndex] == EMPTY)){
+        if (s->turn == WHITE){
+            s->board[captureIndex] = s->board[selectionIndex];
+            s->board[selectionIndex] = EMPTY;
+            s->board[POSTERIOR_SQUARE(captureIndex, WHITE_DIRECTION)] = EMPTY;
+        }else{
+            s->board[captureIndex] = s->board[selectionIndex];
+            s->board[selectionIndex] = EMPTY;
+            s->board[POSTERIOR_SQUARE(captureIndex, BLACK_DIRECTION)] = EMPTY;
+        }
+    }
+    else { // Normal move
         s->board[captureIndex] = s->board[selectionIndex];
         s->board[selectionIndex] = EMPTY;
     }
@@ -208,6 +225,13 @@ int handleMove(SDL_Event e, BoardState *s){
             s->board[captureIndex] = W_QUEEN;
         else
             s->board[captureIndex] = B_QUEEN;
+    }
+
+    // Setting en passant bit
+    if (PAWN == (s->board[captureIndex] & 0b111)){
+        if (abs(((int) selectionIndex) - ((int)captureIndex)) == 16){
+            s->board[captureIndex] |= 0b100000;
+        }
     }
 
     #ifdef NETWORKING
@@ -244,7 +268,6 @@ int handleMove(SDL_Event e, BoardState *s){
         if (attackingSquares & (1ULL << tempKingIndex)){
             if (getColourLegalMoves(s->board, s->turn))
                 return 0;
-
             printf("Checkmate!\n");
             return 1;
         }else if (getColourLegalMoves(s->board, s->turn) == 0){
