@@ -10,13 +10,13 @@ int client_sock;
 struct sockaddr_in server_addr;
 #endif
 
-static uint8_t selectionIndex;
-static uint8_t captureIndex;
 static uint64_t highlightedSquares;
-static uint8_t selectorState;
 
 int main(int argc, char* argv[]) {
     generateKnightLookupTable();
+
+    uint8_t selectionIndex = 0;
+    uint8_t captureIndex = 0;
 
     BoardState s;
     s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
@@ -29,8 +29,7 @@ int main(int argc, char* argv[]) {
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
-    selectorState = 0;
-
+    
     #ifdef NETWORKING
     #ifdef _WIN32
     WSADATA wsaData;
@@ -77,7 +76,7 @@ int main(int argc, char* argv[]) {
     
     while(1) {
         while (SDL_PollEvent(&e) != 0) {
-            if(handleEvents(e, &s) == 1)
+            if(handleEvents(e, &s, &selectionIndex, &captureIndex) == 1)
                 goto end;
         }
 
@@ -85,7 +84,6 @@ int main(int argc, char* argv[]) {
         drawSquares(renderer);
         drawHighlightedSquares(highlightedSquares, renderer);
         drawPieces(renderer, s.board, WHITE_DIRECTION);
-        drawSelector(renderer, captureIndex, selectorState);
         SDL_RenderPresent(renderer);
     }
 
@@ -112,7 +110,7 @@ int main(int argc, char* argv[]) {
     return 1;
 }
 
-int handleEvents(SDL_Event e, BoardState *s){
+int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *captureIndex){
     switch (e.type) {
         case SDL_QUIT:
             return 1;
@@ -124,19 +122,24 @@ int handleEvents(SDL_Event e, BoardState *s){
             }
         case SDL_MOUSEBUTTONDOWN:
             if (e.button.button == SDL_BUTTON_LEFT){
-                return handleSelection(e, s);
+                *selectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                return handleSelection(s, *selectionIndex, *captureIndex);
             }
             else if (e.button.button == SDL_BUTTON_RIGHT){
-                return handleMove(e, s);
+                *captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
+                uint8_t result = handleMove(s, *selectionIndex, *captureIndex);
+                if (result == 2)
+                    return 0;
+                highlightedSquares = 0;
+                return result;
             }
             break;
     }
     return 0;
 }
 
-int handleSelection(SDL_Event e, BoardState *s){
+int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     s->castlingSquares = 0;
-    selectionIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
     if (COLOUR(s->board[selectionIndex]) != s->turn || s->board[selectionIndex] == EMPTY){
         highlightedSquares = 0;
         return 0;
@@ -152,22 +155,16 @@ int handleSelection(SDL_Event e, BoardState *s){
         highlightedSquares |= s->castlingSquares;
     }
 
-    selectorState = 0;
-
     return 0;
 }
 
-int handleMove(SDL_Event e, BoardState *s){
-    if (selectorState == 1)
-        return 0;
-
+int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     // Clearing the en passant bits
     for (int i = 0; i < 64; i++){
         if ((PAWN == (s->board[i] & 0b111)) && COLOUR(s->board[i]) == s->turn)
             s->board[i] &= ~0b00100000;
     }
 
-    captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
     uint64_t legalSquares = getLegalMoves(s->board, selectionIndex);
 
     // First check for castling
@@ -198,8 +195,7 @@ int handleMove(SDL_Event e, BoardState *s){
             }
         }
     }else if (!((legalSquares & (1ULL << captureIndex)))){
-        captureIndex = selectionIndex;
-        return 0;
+        return 2;
     }else if ((PAWN == (s->board[selectionIndex] & 0b111)) && (FILE(selectionIndex) != FILE(captureIndex)) && (s->board[captureIndex] == EMPTY)){
         if (s->turn == WHITE){
             s->board[captureIndex] = s->board[selectionIndex];
@@ -215,9 +211,6 @@ int handleMove(SDL_Event e, BoardState *s){
         s->board[captureIndex] = s->board[selectionIndex];
         s->board[selectionIndex] = EMPTY;
     }
-
-    highlightedSquares = 0;
-    selectorState = 1;
 
     // Checking for promotion
     if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){

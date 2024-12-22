@@ -18,13 +18,6 @@ void initSelector(SDL_Renderer* renderer) {
     SDL_FreeSurface(selectedSurface);
 }
 
-void drawSelector(SDL_Renderer* renderer, uint8_t index, uint8_t state) {
-    if (state)
-        SDL_RenderCopy(renderer, selectedTexture, NULL, squaresRects[index]);
-    else
-        SDL_RenderCopy(renderer, unselectedTexture, NULL, squaresRects[index]);
-}
-
 void initPiecesTexture(SDL_Renderer* renderer) {
     SDL_Surface* surface = IMG_Load("assets/pieces/pieces.png");
     if (surface == NULL) {printf("%s\n", IMG_GetError());}
