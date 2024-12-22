@@ -365,8 +365,9 @@ uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex) {
     return bishopSquares;
 }
 
-uint64_t getCastlingSquares(uint8_t* board, uint8_t colour, uint64_t attackedSquares){
+uint64_t getCastlingSquares(uint8_t* board, uint8_t colour){
     uint64_t castlingSquares = 0;
+    uint64_t attackedSquares = getColourTargetSquares(board, !colour);
     if ((KING == (board[4] & 0b111)) && (COLOUR(board[4]) == BLACK) && (!(board[4] & (1 << 5)))){ // Checks for King
         if ((ROOK == (board[7] & 0b111)) && (COLOUR(board[7]) == BLACK) && (!(board[7] & (1 << 5)))){// Checks kingside rook
             if (board[5] == EMPTY && board[6] == EMPTY) // Checks if there is empty space inbetween the King and kingside rook

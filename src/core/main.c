@@ -29,6 +29,14 @@ int main(int argc, char* argv[]) {
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
+
+    uint64_t testMoves = 0;
+    for (int i = 0; i < 64; i++){
+        testMoves = getLegalMoves(s.board, i);
+        
+        if (KING == (s.board[i] & 0b111))
+            testMoves |= getCastlingSquares(s.board, s.turn);
+    }
     
     #ifdef NETWORKING
     #ifdef _WIN32
@@ -150,8 +158,7 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
 
     // Check for castle
     if ((KING == (s->board[selectionIndex] & 0b111)) && COLOUR(s->board[selectionIndex]) == s->turn){
-        uint64_t oppositeColourTargetSquares = getColourTargetSquares(s->board, !s->turn);
-        s->castlingSquares = getCastlingSquares(s->board, s->turn, oppositeColourTargetSquares);
+        s->castlingSquares = getCastlingSquares(s->board, s->turn);
         highlightedSquares |= s->castlingSquares;
     }
 
@@ -166,8 +173,7 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     }
 
     // Calculating the castling bits
-    uint64_t oppositeColourTargetSquares = getColourTargetSquares(s->board, !s->turn);
-    s->castlingSquares = getCastlingSquares(s->board, s->turn, oppositeColourTargetSquares);
+    s->castlingSquares = getCastlingSquares(s->board, s->turn);
 
     // First check for castling
     if ((s->castlingSquares) && (s->castlingSquares & (1ULL << captureIndex))){
