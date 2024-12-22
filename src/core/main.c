@@ -165,7 +165,9 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
             s->board[i] &= ~0b00100000;
     }
 
-    uint64_t legalSquares = getLegalMoves(s->board, selectionIndex);
+    // Calculating the castling bits
+    uint64_t oppositeColourTargetSquares = getColourTargetSquares(s->board, !s->turn);
+    s->castlingSquares = getCastlingSquares(s->board, s->turn, oppositeColourTargetSquares);
 
     // First check for castling
     if ((s->castlingSquares) && (s->castlingSquares & (1ULL << captureIndex))){
@@ -194,7 +196,7 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
                 s->board[0] = EMPTY;
             }
         }
-    }else if (!((legalSquares & (1ULL << captureIndex)))){
+    }else if (!((getLegalMoves(s->board, selectionIndex) & (1ULL << captureIndex)))){
         return 2;
     }else if ((PAWN == (s->board[selectionIndex] & 0b111)) && (FILE(selectionIndex) != FILE(captureIndex)) && (s->board[captureIndex] == EMPTY)){
         if (s->turn == WHITE){
