@@ -25,18 +25,11 @@ int main(int argc, char* argv[]) {
     s.castlingSquares = 0;
     s.wKingIndex = 60;
     s.bKingIndex = 4;
+    s.halfMoves = 0;
 
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
-
-    uint64_t testMoves = 0;
-    for (int i = 0; i < 64; i++){
-        testMoves = getLegalMoves(s.board, i);
-        
-        if (KING == (s.board[i] & 0b111))
-            testMoves |= getCastlingSquares(s.board, s.turn);
-    }
     
     #ifdef NETWORKING
     #ifdef _WIN32
@@ -166,6 +159,9 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
 }
 
 int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
+    if (s->turn != COLOUR(s->board[selectionIndex]) || s->board[selectionIndex] == EMPTY)
+        return 2;
+
     // Clearing the en passant bits
     for (int i = 0; i < 64; i++){
         if ((PAWN == (s->board[i] & 0b111)) && COLOUR(s->board[i]) == s->turn)
@@ -214,8 +210,14 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
             s->board[selectionIndex] = EMPTY;
             s->board[POSTERIOR_SQUARE(captureIndex, BLACK_DIRECTION)] = EMPTY;
         }
+        s->halfMoves = 0;
     }
     else { // Normal move
+        if (s->board[captureIndex] != EMPTY || PAWN == (s->board[selectionIndex] & 0b111))
+            s->halfMoves = 0;
+        else
+            s->halfMoves += 1;
+        
         s->board[captureIndex] = s->board[selectionIndex];
         s->board[selectionIndex] = EMPTY;
     }
@@ -276,6 +278,46 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
             return 1;
         }
     }
+
+    printf("Half Moves: %u\n", s->halfMoves);
+
+    if (s->halfMoves == 100){
+        printf("Draw by 50 move rule!\n");
+        return 1;
+    }
         
     return 0;
 }
+
+/*
+void calculateNumberOfMoves(BoardState s, uint8_t depth, uint8_t *count){
+    if (depth == 0){
+        return;
+    }
+    
+    for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
+        if ((COLOUR(s.board[selectionIndex]) != s.turn) && (s.board[selectionIndex] != EMPTY)){
+            continue;
+        }
+        
+        uint64_t testMoves = getLegalMoves(s.board, selectionIndex);
+        
+        if (KING == (s.board[selectionIndex] & 0b111))
+            testMoves |= getCastlingSquares(s.board, s.turn);
+
+        for (int captureIndex = 0; captureIndex < 64; captureIndex++){
+            if (testMoves & (1ULL << captureIndex)){
+                BoardState newBoard;
+                memcpy(&newBoard, &s, sizeof(s));
+                newBoard.board = malloc(64);
+                memcpy(newBoard.board, s.board, 64);
+
+                *count += 1;
+                handleMove(&newBoard, selectionIndex, captureIndex);
+                
+                calculateNumberOfMoves(newBoard, depth - 1, count);
+            }
+        }
+    }
+}
+*/

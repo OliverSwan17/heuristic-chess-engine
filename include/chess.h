@@ -64,6 +64,7 @@ typedef struct {
     uint64_t castlingSquares;
     uint8_t wKingIndex;
     uint8_t bKingIndex;
+    uint8_t halfMoves;
 } BoardState;
 
 int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *captureIndex);
@@ -109,3 +110,6 @@ uint64_t getCastlingSquares(uint8_t* board, uint8_t colour);
 
 //Lookup Tables
 void generateKnightLookupTable();
+
+//Test
+//void calculateNumberOfMoves(BoardState s, uint8_t depth, uint8_t *count);
