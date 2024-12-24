@@ -26,21 +26,18 @@ int main(int argc, char* argv[]) {
     s.bKingIndex = 4;
     s.halfMoves = 0;
 
-    BoardState *startingState = malloc(sizeof(BoardState));
-    startingState->board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    startingState->turn = WHITE;
-    startingState->castlingSquares = 0;
-    startingState->wKingIndex = 60;
-    startingState->bKingIndex = 4;
-    startingState->halfMoves = 0;
+    BoardState *t = malloc(sizeof(BoardState));
+    t->board = fenToArray("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R");
+    t->turn = WHITE;
+    t->castlingSquares = 0;
+    t->wKingIndex = 60;
+    t->bKingIndex = 5;
+    t->halfMoves = 0;
 
-    GameTree *t = malloc(sizeof(GameTree));
-    t->position = startingState;
-    t->children = NULL;
-    t->numberOfChildren = 0;
-
+    //t->board[t->bKingIndex] = t->board[t->bKingIndex] & 0b01111;
+    
     uint64_t count = 0;
-    calculateNumberOfMoves(t, 5, &count);
+    calculateNumberOfMoves(t, 4, &count);
     printf("Number of positions: %llu\n", count);
     
 
@@ -81,7 +78,8 @@ int main(int argc, char* argv[]) {
     #endif
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
-    SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window *window = NULL;
+    window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL) { goto error;}
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == NULL) { goto error;}
@@ -304,70 +302,39 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     return 0;
 }
 
-void calculateNumberOfMoves(GameTree *t, uint8_t depth, uint64_t *count){
-    if (depth == 0)
+void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count){
+    if (depth == 0){
+        *count += 1;
         return;
-
-    uint8_t numberOfChildren = 0;
-    for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
-        if ((COLOUR(t->position->board[selectionIndex]) == t->position->turn) && (t->position->board[selectionIndex] != EMPTY)){
-            uint64_t attackingSquares = getLegalMoves(t->position->board, selectionIndex);
-            if (KING == (t->position->board[selectionIndex] & 0b111))
-                attackingSquares |= getCastlingSquares(t->position->board, t->position->turn);
-            for (int captureIndex = 0; captureIndex < 64; captureIndex++){
-                if (attackingSquares & (1ULL << captureIndex))
-                    numberOfChildren++;
-            }
-        }
     }
 
-    t->numberOfChildren = numberOfChildren;
-    t->children = malloc(sizeof(GameTree *) * t->numberOfChildren);
-
-    if (depth == 1)
-        *count += t->numberOfChildren;
-
-    uint8_t childCount = 0;
     for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
-        if ((COLOUR(t->position->board[selectionIndex]) != t->position->turn) || (t->position->board[selectionIndex] == EMPTY)){
+        if ((COLOUR(s->board[selectionIndex]) != s->turn) || (s->board[selectionIndex] == EMPTY)){
             continue;
         }
 
-        uint64_t attackingSquares = getLegalMoves(t->position->board, selectionIndex);
-        if (KING == (t->position->board[selectionIndex] & 0b111))
-            attackingSquares |= getCastlingSquares(t->position->board, t->position->turn);
+        uint64_t attackingSquares = getLegalMoves(s->board, selectionIndex);
+        if (KING == (s->board[selectionIndex] & 0b111))
+            attackingSquares |= getCastlingSquares(s->board, s->turn);
         
         for (int captureIndex = 0; captureIndex < 64; captureIndex++){
             if (attackingSquares & (1ULL << captureIndex)){
-                GameTree *child = malloc(sizeof(GameTree));
-
                 BoardState *newPosition = malloc(sizeof(BoardState));
-                child->position = newPosition;
-                child->children = NULL;
-                child->numberOfChildren = 0;
-
-                memcpy(newPosition, t->position, sizeof(BoardState));
+            
+                memcpy(newPosition, s, sizeof(BoardState));
                 newPosition->board = malloc(64);
-                memcpy(newPosition->board, t->position->board, 64);
+                memcpy(newPosition->board, s->board, 64);
 
-                t->children[childCount] = child;
-                
-                if(handleMove(newPosition, selectionIndex, captureIndex) == 1)
-                    childCount++;
-                else{
-                    calculateNumberOfMoves(child, depth - 1, count);
-                    childCount++;
+                if(handleMove(newPosition, selectionIndex, captureIndex) != 1){
+                    calculateNumberOfMoves(newPosition, depth - 1, count);
                 }
 
-                free(child);
                 free(newPosition);
             }
         
         }
 
     }
-
-    free(t->children);
 
     return;
 }

@@ -113,10 +113,9 @@ uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
     if (IS_EMPTY(board[anteriorSquare])){
         pawnSquares |= (1ULL << anteriorSquare);
         anteriorSquare = ANTERIOR_SQUARE(anteriorSquare, direction);
-        if(IS_EMPTY(board[anteriorSquare])){
-            if((pieceColour == WHITE && pieceIndex >= 48 && pieceIndex <= 55) || (pieceColour == BLACK && pieceIndex >=8 && pieceIndex <= 15)){
+        if((pieceColour == WHITE && pieceIndex >= 48 && pieceIndex <= 55) || (pieceColour == BLACK && pieceIndex >=8 && pieceIndex <= 15)){
+            if(IS_EMPTY(board[anteriorSquare]))
                 pawnSquares |= (1ULL << anteriorSquare);
-            }
         }
     }
 
