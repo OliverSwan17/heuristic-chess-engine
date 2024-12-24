@@ -1,6 +1,6 @@
 ifeq ($(OS),Windows_NT)
 CC = gcc
-CFLAGS = -Wall -g -Iinclude -I/c/msys64/mingw64/include/SDL2
+CFLAGS = -Wall -g -Iinclude -I/c/msys64/mingw64/include/SDL2 -O3
 LDFLAGS = -L/c/msys64/mingw64/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lws2_32
 
 SRCS_DIR = src

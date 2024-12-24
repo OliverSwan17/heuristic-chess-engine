@@ -121,4 +121,4 @@ uint64_t getCastlingSquares(uint8_t* board, uint8_t colour);
 void generateKnightLookupTable();
 
 //Test
-void calculateNumberOfMoves(GameTree *t, uint8_t depth);
+void calculateNumberOfMoves(GameTree *t, uint8_t depth, uint64_t *count);

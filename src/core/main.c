@@ -39,8 +39,11 @@ int main(int argc, char* argv[]) {
     t->children = NULL;
     t->numberOfChildren = 0;
 
-    calculateNumberOfMoves(t, 4);
+    uint64_t count = 0;
+    calculateNumberOfMoves(t, 5, &count);
+    printf("Number of positions: %llu\n", count);
     
+
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
@@ -285,10 +288,10 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
         if (attackingSquares & (1ULL << tempKingIndex)){
             if (getColourLegalMoves(s->board, s->turn))
                 return 0;
-            printf("Checkmate!\n");
+            //printf("Checkmate!\n");
             return 1;
         }else if (getColourLegalMoves(s->board, s->turn) == 0){
-            printf("Stalemate!\n");
+            //printf("Stalemate!\n");
             return 1;
         }
     }
@@ -301,7 +304,7 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     return 0;
 }
 
-void calculateNumberOfMoves(GameTree *t, uint8_t depth){
+void calculateNumberOfMoves(GameTree *t, uint8_t depth, uint64_t *count){
     if (depth == 0)
         return;
 
@@ -322,7 +325,7 @@ void calculateNumberOfMoves(GameTree *t, uint8_t depth){
     t->children = malloc(sizeof(GameTree *) * t->numberOfChildren);
 
     if (depth == 1)
-        printf("%u\n", t->numberOfChildren);
+        *count += t->numberOfChildren;
 
     uint8_t childCount = 0;
     for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
@@ -349,14 +352,22 @@ void calculateNumberOfMoves(GameTree *t, uint8_t depth){
 
                 t->children[childCount] = child;
                 
-                handleMove(newPosition, selectionIndex, captureIndex);
-                calculateNumberOfMoves(child, depth - 1);
-                childCount++;
+                if(handleMove(newPosition, selectionIndex, captureIndex) == 1)
+                    childCount++;
+                else{
+                    calculateNumberOfMoves(child, depth - 1, count);
+                    childCount++;
+                }
+
+                free(child);
+                free(newPosition);
             }
         
         }
 
     }
+
+    free(t->children);
 
     return;
 }
