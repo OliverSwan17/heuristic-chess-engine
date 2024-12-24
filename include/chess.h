@@ -67,6 +67,15 @@ typedef struct {
     uint8_t halfMoves;
 } BoardState;
 
+typedef struct GameTree GameTree;
+
+struct GameTree{
+    BoardState *position;
+    struct GameTree **children;
+    uint8_t numberOfChildren;
+};
+
+
 int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *captureIndex);
 int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex);
 int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex);
@@ -112,4 +121,4 @@ uint64_t getCastlingSquares(uint8_t* board, uint8_t colour);
 void generateKnightLookupTable();
 
 //Test
-//void calculateNumberOfMoves(BoardState s, uint8_t depth, uint8_t *count);
+void calculateNumberOfMoves(GameTree *t, uint8_t depth);

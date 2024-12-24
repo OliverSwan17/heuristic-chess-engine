@@ -20,17 +20,31 @@ int main(int argc, char* argv[]) {
 
     BoardState s;
     s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    //s.board = fenToArray("rp2kpqr/8/8/8/8/8/8/RP2KPQR");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
     s.bKingIndex = 4;
     s.halfMoves = 0;
 
+    BoardState *startingState = malloc(sizeof(BoardState));
+    startingState->board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    startingState->turn = WHITE;
+    startingState->castlingSquares = 0;
+    startingState->wKingIndex = 60;
+    startingState->bKingIndex = 4;
+    startingState->halfMoves = 0;
+
+    GameTree *t = malloc(sizeof(GameTree));
+    t->position = startingState;
+    t->children = NULL;
+    t->numberOfChildren = 0;
+
+    calculateNumberOfMoves(t, 4);
+    
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
-    
+
     #ifdef NETWORKING
     #ifdef _WIN32
     WSADATA wsaData;
@@ -279,8 +293,6 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
         }
     }
 
-    printf("Half Moves: %u\n", s->halfMoves);
-
     if (s->halfMoves == 100){
         printf("Draw by 50 move rule!\n");
         return 1;
@@ -289,35 +301,62 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     return 0;
 }
 
-/*
-void calculateNumberOfMoves(BoardState s, uint8_t depth, uint8_t *count){
-    if (depth == 0){
+void calculateNumberOfMoves(GameTree *t, uint8_t depth){
+    if (depth == 0)
         return;
-    }
-    
+
+    uint8_t numberOfChildren = 0;
     for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
-        if ((COLOUR(s.board[selectionIndex]) != s.turn) && (s.board[selectionIndex] != EMPTY)){
-            continue;
-        }
-        
-        uint64_t testMoves = getLegalMoves(s.board, selectionIndex);
-        
-        if (KING == (s.board[selectionIndex] & 0b111))
-            testMoves |= getCastlingSquares(s.board, s.turn);
-
-        for (int captureIndex = 0; captureIndex < 64; captureIndex++){
-            if (testMoves & (1ULL << captureIndex)){
-                BoardState newBoard;
-                memcpy(&newBoard, &s, sizeof(s));
-                newBoard.board = malloc(64);
-                memcpy(newBoard.board, s.board, 64);
-
-                *count += 1;
-                handleMove(&newBoard, selectionIndex, captureIndex);
-                
-                calculateNumberOfMoves(newBoard, depth - 1, count);
+        if ((COLOUR(t->position->board[selectionIndex]) == t->position->turn) && (t->position->board[selectionIndex] != EMPTY)){
+            uint64_t attackingSquares = getLegalMoves(t->position->board, selectionIndex);
+            if (KING == (t->position->board[selectionIndex] & 0b111))
+                attackingSquares |= getCastlingSquares(t->position->board, t->position->turn);
+            for (int captureIndex = 0; captureIndex < 64; captureIndex++){
+                if (attackingSquares & (1ULL << captureIndex))
+                    numberOfChildren++;
             }
         }
     }
+
+    t->numberOfChildren = numberOfChildren;
+    t->children = malloc(sizeof(GameTree *) * t->numberOfChildren);
+
+    if (depth == 1)
+        printf("%u\n", t->numberOfChildren);
+
+    uint8_t childCount = 0;
+    for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
+        if ((COLOUR(t->position->board[selectionIndex]) != t->position->turn) || (t->position->board[selectionIndex] == EMPTY)){
+            continue;
+        }
+
+        uint64_t attackingSquares = getLegalMoves(t->position->board, selectionIndex);
+        if (KING == (t->position->board[selectionIndex] & 0b111))
+            attackingSquares |= getCastlingSquares(t->position->board, t->position->turn);
+        
+        for (int captureIndex = 0; captureIndex < 64; captureIndex++){
+            if (attackingSquares & (1ULL << captureIndex)){
+                GameTree *child = malloc(sizeof(GameTree));
+
+                BoardState *newPosition = malloc(sizeof(BoardState));
+                child->position = newPosition;
+                child->children = NULL;
+                child->numberOfChildren = 0;
+
+                memcpy(newPosition, t->position, sizeof(BoardState));
+                newPosition->board = malloc(64);
+                memcpy(newPosition->board, t->position->board, 64);
+
+                t->children[childCount] = child;
+                
+                handleMove(newPosition, selectionIndex, captureIndex);
+                calculateNumberOfMoves(child, depth - 1);
+                childCount++;
+            }
+        
+        }
+
+    }
+
+    return;
 }
-*/
