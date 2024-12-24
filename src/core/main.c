@@ -19,7 +19,8 @@ int main(int argc, char* argv[]) {
     uint8_t captureIndex = 0;
 
     BoardState s;
-    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    s.board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
@@ -27,17 +28,18 @@ int main(int argc, char* argv[]) {
     s.halfMoves = 0;
 
     BoardState *t = malloc(sizeof(BoardState));
-    t->board = fenToArray("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R");
+    t->board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
     t->turn = WHITE;
     t->castlingSquares = 0;
     t->wKingIndex = 60;
     t->bKingIndex = 5;
     t->halfMoves = 0;
 
-    //t->board[t->bKingIndex] = t->board[t->bKingIndex] & 0b01111;
+    t->board[t->bKingIndex] = t->board[t->bKingIndex] & 0b11111;
+    t->board[t->wKingIndex] = t->board[t->wKingIndex] & 0b11111;
     
     uint64_t count = 0;
-    calculateNumberOfMoves(t, 4, &count);
+    calculateNumberOfMoves(t, 3, &count);
     printf("Number of positions: %llu\n", count);
     
 
@@ -143,7 +145,7 @@ int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *c
             }
             else if (e.button.button == SDL_BUTTON_RIGHT){
                 *captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                uint8_t result = handleMove(s, *selectionIndex, *captureIndex);
+                uint8_t result = handleMove(s, *selectionIndex, *captureIndex, ROOK); // Add functionality for this in the ui later.
                 if (result == 2)
                     return 0;
                 highlightedSquares = 0;
@@ -173,7 +175,7 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
     return 0;
 }
 
-int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
+int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex, uint8_t promotionType){
     if (s->turn != COLOUR(s->board[selectionIndex]) || s->board[selectionIndex] == EMPTY)
         return 2;
 
@@ -240,9 +242,9 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     // Checking for promotion
     if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
         if(COLOUR(s->board[captureIndex]) == WHITE)
-            s->board[captureIndex] = W_QUEEN;
+            s->board[captureIndex] = promotionType + 8;
         else
-            s->board[captureIndex] = B_QUEEN;
+            s->board[captureIndex] = promotionType;
     }
 
     // Setting en passant bit
@@ -281,7 +283,7 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
     // It also switches the turn as the checkmate / stalemate is the last check in this function.
     s->turn = s->turn ^ 1;
     uint8_t tempKingIndex = s->turn ? s->wKingIndex : s->bKingIndex;
-    
+
     if (getLegalMoves(s->board, tempKingIndex) == 0) {
         if (attackingSquares & (1ULL << tempKingIndex)){
             if (getColourLegalMoves(s->board, s->turn))
@@ -319,17 +321,33 @@ void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count){
         
         for (int captureIndex = 0; captureIndex < 64; captureIndex++){
             if (attackingSquares & (1ULL << captureIndex)){
-                BoardState *newPosition = malloc(sizeof(BoardState));
+                if ((PAWN == (s->board[selectionIndex] & 0b111)) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
+                    for (int promotionType = 2; promotionType < 6; promotionType++){
+                        BoardState *newPosition = malloc(sizeof(BoardState));
             
-                memcpy(newPosition, s, sizeof(BoardState));
-                newPosition->board = malloc(64);
-                memcpy(newPosition->board, s->board, 64);
+                        memcpy(newPosition, s, sizeof(BoardState));
+                        newPosition->board = malloc(64);
+                        memcpy(newPosition->board, s->board, 64);
 
-                if(handleMove(newPosition, selectionIndex, captureIndex) != 1){
-                    calculateNumberOfMoves(newPosition, depth - 1, count);
+                        if(handleMove(newPosition, selectionIndex, captureIndex, promotionType) == 0){
+                            calculateNumberOfMoves(newPosition, depth - 1, count);
+                        }
+
+                        free(newPosition);
+                    }
+                }else{
+                    BoardState *newPosition = malloc(sizeof(BoardState));
+            
+                    memcpy(newPosition, s, sizeof(BoardState));
+                    newPosition->board = malloc(64);
+                    memcpy(newPosition->board, s->board, 64);
+
+                    if(handleMove(newPosition, selectionIndex, captureIndex, 0) == 0){
+                        calculateNumberOfMoves(newPosition, depth - 1, count);
+                    }
+
+                    free(newPosition);
                 }
-
-                free(newPosition);
             }
         
         }

@@ -78,7 +78,7 @@ struct GameTree{
 
 int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *captureIndex);
 int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex);
-int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex);
+int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex, uint8_t promotionType);
 
 //Fen
 uint8_t* fenToArray(char* fen);

@@ -63,8 +63,22 @@ uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex){
     for (int i = 0; i < 64; i++){
         if(targetSquares & (1ULL << i)){
             memcpy(tempBoard, board, 64);
-            tempBoard[pieceIndex] = EMPTY;
-            tempBoard[i] = piece;
+            
+            if ((PAWN == (tempBoard[pieceIndex] & 0b111)) && (FILE(pieceIndex) != FILE(i)) && (tempBoard[i] == EMPTY)){
+                if (pieceColour == WHITE){
+                    tempBoard[i] = tempBoard[pieceIndex];
+                    tempBoard[pieceIndex] = EMPTY;
+                    tempBoard[POSTERIOR_SQUARE(i, WHITE_DIRECTION)] = EMPTY;
+                }else{
+                    tempBoard[i] = tempBoard[pieceIndex];
+                    tempBoard[pieceIndex] = EMPTY;
+                    tempBoard[POSTERIOR_SQUARE(i, BLACK_DIRECTION)] = EMPTY;
+                }
+                
+            }else{
+                tempBoard[pieceIndex] = EMPTY;
+                tempBoard[i] = piece;
+            }
             
             if((piece & 0b111) == KING){
                 kingSquare = i;
