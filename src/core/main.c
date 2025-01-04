@@ -149,10 +149,6 @@ int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *c
             else if (e.button.button == SDL_BUTTON_RIGHT){
                 *captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
                 
-                for (int i = 0; i < s->numberOfLegalmoves; i++){
-
-                }
-
                 Move *move = NULL;
                 for (int i = 0; i < s->numberOfLegalmoves; i++){
                     if (s->moves[i].srcSquare == *selectionIndex && s->moves[i].dstSquare == *captureIndex){
@@ -202,6 +198,8 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
 int handleMove(BoardState *s, Move *move){
     if (s->turn != COLOUR(s->board[move->srcSquare]) || s->board[move->srcSquare] == EMPTY)
         return 2;
+
+    printf("%u\n", move->type);
 
     // First check for castling
     if (move->type == KING_CASTLE){

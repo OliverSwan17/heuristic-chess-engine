@@ -61,6 +61,7 @@ void legalMoves(BoardState* s){
             continue;
 
         uint64_t targetSquares = getTargetSquares(board, srcIndex);
+        targetSquares |= s->castlingSquares;
 
         for (int dstIndex = 0; dstIndex < 64; dstIndex++){
             if (targetSquares & (1ULL << dstIndex)) {
