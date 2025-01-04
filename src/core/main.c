@@ -19,14 +19,17 @@ int main(int argc, char* argv[]) {
     uint8_t captureIndex = 0;
 
     BoardState s;
-    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    s.board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
     s.bKingIndex = 4;
     s.halfMoves = 0;
+    s.moves = NULL;
+    s.numberOfLegalmoves = 0;
 
+    /*
     BoardState *t = malloc(sizeof(BoardState));
     t->board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
     t->turn = WHITE;
@@ -41,8 +44,8 @@ int main(int argc, char* argv[]) {
     uint64_t count = 0;
     calculateNumberOfMoves(t, 3, &count);
     printf("Number of positions: %llu\n", count);
+    */
     
-
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
@@ -145,7 +148,23 @@ int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *c
             }
             else if (e.button.button == SDL_BUTTON_RIGHT){
                 *captureIndex = MOUSE_TO_SQUARE_INDEX(e.button.x, e.button.y);
-                uint8_t result = handleMove(s, *selectionIndex, *captureIndex, ROOK); // Add functionality for this in the ui later.
+                
+                for (int i = 0; i < s->numberOfLegalmoves; i++){
+
+                }
+
+                Move *move = NULL;
+                for (int i = 0; i < s->numberOfLegalmoves; i++){
+                    if (s->moves[i].srcSquare == *selectionIndex && s->moves[i].dstSquare == *captureIndex){
+                        move = &s->moves[i];
+                        break;
+                    }
+                }
+
+                if (move == NULL)
+                    return 0;
+
+                uint8_t result = handleMove(s, move); // Add functionality for this in the ui later.
                 if (result == 2)
                     return 0;
                 highlightedSquares = 0;
@@ -157,103 +176,103 @@ int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *c
 }
 
 int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex){
-    s->castlingSquares = 0;
+    highlightedSquares = 0;
     if (COLOUR(s->board[selectionIndex]) != s->turn || s->board[selectionIndex] == EMPTY){
-        highlightedSquares = 0;
         return 0;
     }
 
-    captureIndex = selectionIndex;
-    highlightedSquares = getLegalMoves(s->board, selectionIndex);
+    if (s->moves == NULL)
+        legalMoves(s);
 
+    captureIndex = selectionIndex;
+
+    for (int i = 0; i < s->numberOfLegalmoves; i++){
+        if (s->moves[i].srcSquare == selectionIndex)
+            highlightedSquares |= (1ULL << s->moves[i].dstSquare);
+    }
+    
     // Check for castle
     if ((KING == (s->board[selectionIndex] & 0b111)) && COLOUR(s->board[selectionIndex]) == s->turn){
-        s->castlingSquares = getCastlingSquares(s->board, s->turn);
         highlightedSquares |= s->castlingSquares;
     }
 
     return 0;
 }
 
-int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex, uint8_t promotionType){
-    if (s->turn != COLOUR(s->board[selectionIndex]) || s->board[selectionIndex] == EMPTY)
+int handleMove(BoardState *s, Move *move){
+    if (s->turn != COLOUR(s->board[move->srcSquare]) || s->board[move->srcSquare] == EMPTY)
         return 2;
-
-    // Clearing the en passant bits
-    for (int i = 0; i < 64; i++){
-        if ((PAWN == (s->board[i] & 0b111)) && COLOUR(s->board[i]) == s->turn)
-            s->board[i] &= ~0b00100000;
-    }
-
-    // Calculating the castling bits
-    s->castlingSquares = getCastlingSquares(s->board, s->turn);
 
     // First check for castling
-    if ((s->castlingSquares) && (s->castlingSquares & (1ULL << captureIndex))){
-        if (s->turn == WHITE && selectionIndex == 60){
-            if (captureIndex == 62){
-                s->board[captureIndex] = s->board[60];
-                s->board[selectionIndex] = EMPTY;
-                s->board[61] = s->board[63];
-                s->board[63] = EMPTY;
-            }else if (captureIndex == 58){
-                s->board[captureIndex] = s->board[60];
-                s->board[selectionIndex] = EMPTY;
-                s->board[59] = s->board[56];
-                s->board[56] = EMPTY;
-            }
-        }else if (s->turn == BLACK && selectionIndex == 4){
-            if (captureIndex == 6){
-                s->board[captureIndex] = s->board[4];
-                s->board[selectionIndex] = EMPTY;
-                s->board[5] = s->board[7];
-                s->board[7] = EMPTY;
-            }else if (captureIndex == 2){
-                s->board[captureIndex] = s->board[4];
-                s->board[selectionIndex] = EMPTY;
-                s->board[3] = s->board[0];
-                s->board[0] = EMPTY;
-            }
-        }
-    }else if (!((getLegalMoves(s->board, selectionIndex) & (1ULL << captureIndex)))){
-        return 2;
-    }else if ((PAWN == (s->board[selectionIndex] & 0b111)) && (FILE(selectionIndex) != FILE(captureIndex)) && (s->board[captureIndex] == EMPTY)){
+    if (move->type == KING_CASTLE){
         if (s->turn == WHITE){
-            s->board[captureIndex] = s->board[selectionIndex];
-            s->board[selectionIndex] = EMPTY;
-            s->board[POSTERIOR_SQUARE(captureIndex, WHITE_DIRECTION)] = EMPTY;
+            s->board[move->dstSquare] = s->board[60];
+            s->board[move->srcSquare] = EMPTY;
+            s->board[61] = s->board[63];
+            s->board[63] = EMPTY;
         }else{
-            s->board[captureIndex] = s->board[selectionIndex];
-            s->board[selectionIndex] = EMPTY;
-            s->board[POSTERIOR_SQUARE(captureIndex, BLACK_DIRECTION)] = EMPTY;
+            s->board[move->dstSquare] = s->board[4];
+            s->board[move->srcSquare] = EMPTY;
+            s->board[5] = s->board[7];
+            s->board[7] = EMPTY;
+        }
+    }else if (move->type == QUEEN_CASTLE){
+        if (s->turn == WHITE){
+            s->board[move->dstSquare] = s->board[60];
+            s->board[move->srcSquare] = EMPTY;
+            s->board[59] = s->board[56];
+            s->board[56] = EMPTY;
+        }else{
+            s->board[move->dstSquare] = s->board[4];
+            s->board[move->srcSquare] = EMPTY;
+            s->board[3] = s->board[0];
+            s->board[0] = EMPTY;
+        }
+    }
+
+    else if (move->type == EN_PASSANT){
+        if (s->turn == WHITE){
+            s->board[move->dstSquare] = s->board[move->srcSquare];
+            s->board[move->srcSquare] = EMPTY;
+            s->board[POSTERIOR_SQUARE(move->dstSquare, WHITE_DIRECTION)] = EMPTY;
+        }else{
+            s->board[move->dstSquare] = s->board[move->srcSquare];
+            s->board[move->srcSquare] = EMPTY;
+            s->board[POSTERIOR_SQUARE(move->dstSquare, BLACK_DIRECTION)] = EMPTY;
         }
         s->halfMoves = 0;
     }
-    else { // Normal move
-        if (s->board[captureIndex] != EMPTY || PAWN == (s->board[selectionIndex] & 0b111))
+    else {
+        if (s->board[move->dstSquare] != EMPTY || PAWN == (s->board[move->srcSquare] & 0b111))
             s->halfMoves = 0;
         else
             s->halfMoves += 1;
         
-        s->board[captureIndex] = s->board[selectionIndex];
-        s->board[selectionIndex] = EMPTY;
+        s->board[move->dstSquare] = s->board[move->srcSquare];
+        s->board[move->srcSquare] = EMPTY;
     }
 
     // Checking for promotion
-    if (((s->board[captureIndex] & 0b111) == PAWN) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
-        if(COLOUR(s->board[captureIndex]) == WHITE)
-            s->board[captureIndex] = promotionType + 8;
-        else
-            s->board[captureIndex] = promotionType;
+    if (move->type & 0b1000){
+        uint8_t colourOffset = 0;
+        if(COLOUR(s->board[move->dstSquare]) == WHITE)
+            colourOffset = 8;
+
+        if ((move->type & 0b11) == 0b0)
+            s->board[move->dstSquare] = KNIGHT + colourOffset;
+        else if ((move->type & 0b11) == 0b01)
+            s->board[move->dstSquare] = BISHOP + colourOffset;
+        else if ((move->type & 0b11) == 0b10)
+            s->board[move->dstSquare] = ROOK + colourOffset;
+        else if ((move->type & 0b11) == 0b11)
+            s->board[move->dstSquare] = QUEEN + colourOffset;
     }
 
-    // Setting en passant bit
-    if (PAWN == (s->board[captureIndex] & 0b111)){
-        if (abs(((int) selectionIndex) - ((int)captureIndex)) == 16){
-            s->board[captureIndex] |= 0b100000;
-        }
+    // Setting en passant bit if required
+    if (move->type == DOUBLE_PAWN_PUSH){
+        s->board[move->dstSquare] |= 0b100000;
     }
-
+    
     #ifdef NETWORKING
     #ifdef _WIN32
     SetEvent(hEvent);
@@ -261,49 +280,25 @@ int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex, uint
     #endif
 
     // If the rook just moved, set the 5th bit to indicate that the piece has been moved
-    if ((ROOK == (s->board[captureIndex] & 0b111)) || (KING == (s->board[captureIndex] & 0b111))){
-        s->board[captureIndex] |= 1ULL << 5;
+    if ((ROOK == (s->board[move->dstSquare] & 0b111)) || (KING == (s->board[move->dstSquare] & 0b111))){
+        s->board[move->dstSquare] |= 1ULL << 5;
     }
     
     // Updating the King indexs in the boardstate
-    if (KING == (s->board[captureIndex] & 0b111)){
+    if (KING == (s->board[move->dstSquare] & 0b111)){
         if (s->turn == WHITE)
-            s->wKingIndex = captureIndex;
+            s->wKingIndex = move->dstSquare;
         else
-            s->bKingIndex = captureIndex;
+            s->bKingIndex = move->dstSquare;
     }
 
-    // Calculating the current colours attacking squares
-    uint64_t attackingSquares = getColourLegalMoves(s->board, s->turn);
+    s->turn = !s->turn;
+    s->moves = NULL;
 
-    // If the king opposite king has no moves, check if it is under attack for checkmate
-    // else check if there are no legal moves for stalemate.
-
-    // This switch helps to check for stalemate and checkmate.
-    // It also switches the turn as the checkmate / stalemate is the last check in this function.
-    s->turn = s->turn ^ 1;
-    uint8_t tempKingIndex = s->turn ? s->wKingIndex : s->bKingIndex;
-
-    if (getLegalMoves(s->board, tempKingIndex) == 0) {
-        if (attackingSquares & (1ULL << tempKingIndex)){
-            if (getColourLegalMoves(s->board, s->turn))
-                return 0;
-            //printf("Checkmate!\n");
-            return 1;
-        }else if (getColourLegalMoves(s->board, s->turn) == 0){
-            //printf("Stalemate!\n");
-            return 1;
-        }
-    }
-
-    if (s->halfMoves == 100){
-        printf("Draw by 50 move rule!\n");
-        return 1;
-    }
-        
     return 0;
 }
 
+/*
 void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count){
     if (depth == 0){
         *count += 1;
@@ -356,3 +351,4 @@ void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count){
 
     return;
 }
+*/

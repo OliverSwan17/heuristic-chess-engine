@@ -40,6 +40,122 @@ uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour){
     return targetSquares;
 }
 
+void legalMoves(BoardState* s){
+    Move *moves = malloc(218 * sizeof(Move));
+    uint8_t moveCount = 0;
+
+    uint8_t *board = s->board;
+
+    // Calculating the castling bits
+    s->castlingSquares = getCastlingSquares(s->board, s->turn);
+
+    // Looping through each piece of the correct colour.
+    for (int srcIndex = 0; srcIndex < 64; srcIndex++){
+        uint8_t piece = board[srcIndex];
+
+        // Clearing the en-passant bit.
+        if ((piece & 0b111) == PAWN)
+            s->board[srcIndex] &= ~0b100000;
+
+        if (COLOUR(piece) != s->turn || board[srcIndex] == EMPTY)
+            continue;
+
+        uint64_t targetSquares = getTargetSquares(board, srcIndex);
+
+        for (int dstIndex = 0; dstIndex < 64; dstIndex++){
+            if (targetSquares & (1ULL << dstIndex)) {
+                uint8_t moveType = 0;
+                uint8_t kingSquare = (s->turn == 0) ? s->bKingIndex : s->wKingIndex;
+                uint8_t tempBoard[64];
+                memcpy(tempBoard, board, 64);
+
+                // First check for castling
+                if ((s->castlingSquares) && (s->castlingSquares & (1ULL << dstIndex))){
+                    if (s->turn == WHITE && srcIndex == 60){
+                        if (dstIndex == 62){
+                            tempBoard[dstIndex] = tempBoard[60];
+                            tempBoard[srcIndex] = EMPTY;
+                            tempBoard[61] = tempBoard[63];
+                            tempBoard[63] = EMPTY;
+                            moveType = KING_CASTLE;
+                        }else if (dstIndex == 58){
+                            tempBoard[dstIndex] = tempBoard[60];
+                            tempBoard[srcIndex] = EMPTY;
+                            tempBoard[59] = tempBoard[56];
+                            tempBoard[56] = EMPTY;
+                            moveType = QUEEN_CASTLE;
+                        }
+                    }else if (s->turn == BLACK && srcIndex == 4){
+                        if (dstIndex == 6){
+                            tempBoard[dstIndex] = tempBoard[4];
+                            tempBoard[srcIndex] = EMPTY;
+                            tempBoard[5] = tempBoard[7];
+                            tempBoard[7] = EMPTY;
+                            moveType = KING_CASTLE;
+                        }else if (dstIndex == 2){
+                            tempBoard[dstIndex] = tempBoard[4];
+                            tempBoard[srcIndex] = EMPTY;
+                            tempBoard[3] = tempBoard[0];
+                            tempBoard[0] = EMPTY;
+                            moveType = QUEEN_CASTLE;
+                        }
+                    }
+                }else if ((PAWN == (tempBoard[srcIndex] & 0b111)) && (FILE(srcIndex) != FILE(dstIndex)) && (tempBoard[dstIndex] == EMPTY)){
+                    moveType = EN_PASSANT;
+                    if (s->turn == WHITE){
+                        tempBoard[dstIndex] = tempBoard[srcIndex];
+                        tempBoard[srcIndex] = EMPTY;
+                        tempBoard[POSTERIOR_SQUARE(dstIndex, WHITE_DIRECTION)] = EMPTY;
+                    }else{
+                        tempBoard[dstIndex] = tempBoard[srcIndex];
+                        tempBoard[srcIndex] = EMPTY;
+                        tempBoard[POSTERIOR_SQUARE(dstIndex, BLACK_DIRECTION)] = EMPTY;
+                    }
+                }else{
+                    if (tempBoard[dstIndex] == EMPTY)
+                        moveType = QUIET_MOVE;
+                    else
+                        moveType = CAPTURE;
+
+                    tempBoard[srcIndex] = EMPTY;
+                    tempBoard[dstIndex] = piece;
+                }
+
+                if((piece & 0b111) == KING){
+                    kingSquare = dstIndex;
+                }
+
+                // Checking for promotion
+                if (((s->board[dstIndex] & 0b111) == PAWN) && (RANK(dstIndex) == 1 || RANK(dstIndex) == 8)){
+                    moveType |= 0b1000;
+
+                    if ((s->board[srcIndex] & 0b111) == BISHOP)
+                        moveType |= 0b01;
+                    else if ((s->board[srcIndex] & 0b111) == ROOK)
+                        moveType |= 0b10;
+                    else if ((s->board[srcIndex] & 0b111) == QUEEN)
+                        moveType |= 0b11;
+                }
+
+                if (abs(((int) srcIndex) - ((int)dstIndex)) == 16){
+                    moveType = DOUBLE_PAWN_PUSH;
+                }
+
+                // We require some more advanced checks here as some legal moves are being put through.
+                if(!((getColourTargetSquares(tempBoard, (s->turn == 0) ? 1 : 0) >> kingSquare) & 1)){
+                    moves[moveCount].type = moveType;
+                    moves[moveCount].srcSquare = srcIndex;
+                    moves[moveCount].dstSquare = dstIndex;
+                    moveCount += 1;
+                }
+            }
+        }
+    }
+
+    s->numberOfLegalmoves = moveCount;
+    s->moves = moves;
+}
+
 uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
     uint8_t pieceColour = COLOUR(piece);

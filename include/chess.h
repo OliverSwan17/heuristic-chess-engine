@@ -26,12 +26,12 @@
 #define BLACK 0 
 #define WHITE 1
 
-#define PAWN 1
-#define KNIGHT 2
-#define BISHOP 3
-#define ROOK 4
-#define QUEEN 5
-#define KING 6
+#define PAWN (1)
+#define KNIGHT (2)
+#define BISHOP (3)
+#define ROOK (4)
+#define QUEEN (5)
+#define KING (6)
 
 // Misc
 #define MOUSE_TO_SQUARE_INDEX(x, y) (((x) / 100) + ((y) / 100) * 8)
@@ -58,6 +58,12 @@
 #define SQUARE_SIZE (SCREEN_LENGTH / 8)
 
 //Main
+typedef struct Move{
+    uint8_t srcSquare;
+    uint8_t dstSquare;
+    uint8_t type;
+} Move;
+
 typedef struct {
     uint8_t* board;
     uint8_t turn;
@@ -65,6 +71,8 @@ typedef struct {
     uint8_t wKingIndex;
     uint8_t bKingIndex;
     uint8_t halfMoves;
+    Move* moves;
+    uint8_t numberOfLegalmoves;
 } BoardState;
 
 typedef struct GameTree GameTree;
@@ -76,25 +84,43 @@ struct GameTree{
 };
 
 
+
+#define QUIET_MOVE (0)
+#define DOUBLE_PAWN_PUSH (1)
+#define KING_CASTLE (2)
+#define QUEEN_CASTLE (3)
+#define CAPTURE (4)
+#define EN_PASSANT (5)
+#define KNIGHT_PROMOTION (6)
+#define BISHOP_PROMOTION (7)
+#define ROOK_PROMOTION (8)
+#define QUEEN_PROMOTION (9)
+#define KNIGHT_PROMOTION_CAPTURE (10)
+#define BISHOP_PROMOTION_CAPTURE (11) 
+#define ROOK_PROMOTION_CAPTURE (12)
+#define QUEEN_PROMOTION_CAPTURE (13)
+
+
+
 int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *captureIndex);
 int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex);
-int handleMove(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex, uint8_t promotionType);
+int handleMove(BoardState *s, Move *move);
 
 //Fen
 uint8_t* fenToArray(char* fen);
-#define B_PAWN 1
-#define B_KNIGHT 2
-#define B_BISHOP 3
-#define B_ROOK 4
-#define B_QUEEN 5
-#define B_KING 6
+#define B_PAWN (1)
+#define B_KNIGHT (2)
+#define B_BISHOP (3)
+#define B_ROOK (4)
+#define B_QUEEN (5)
+#define B_KING (6)
 
-#define W_PAWN 9
-#define W_KNIGHT 10
-#define W_BISHOP 11
-#define W_ROOK 12
-#define W_QUEEN 13
-#define W_KING 14
+#define W_PAWN (9)
+#define W_KNIGHT (10)
+#define W_BISHOP (11)
+#define W_ROOK (12)
+#define W_QUEEN (13)
+#define W_KING (14)
 
 //Draw
 void initRectangles();
@@ -117,8 +143,10 @@ uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour);
 uint64_t getColourLegalMoves(uint8_t* board, uint8_t colour);
 uint64_t getCastlingSquares(uint8_t* board, uint8_t colour);
 
+void legalMoves(BoardState* boardState);
+
 //Lookup Tables
 void generateKnightLookupTable();
 
 //Test
-void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count);
+//void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count);
