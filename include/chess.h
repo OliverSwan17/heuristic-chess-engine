@@ -75,16 +75,6 @@ typedef struct {
     uint8_t numberOfLegalmoves;
 } BoardState;
 
-typedef struct GameTree GameTree;
-
-struct GameTree{
-    BoardState *position;
-    struct GameTree **children;
-    uint8_t numberOfChildren;
-};
-
-
-
 #define QUIET_MOVE (0)
 #define DOUBLE_PAWN_PUSH (1)
 #define KING_CASTLE (2)
@@ -99,8 +89,6 @@ struct GameTree{
 #define BISHOP_PROMOTION_CAPTURE (11) 
 #define ROOK_PROMOTION_CAPTURE (12)
 #define QUEEN_PROMOTION_CAPTURE (13)
-
-
 
 int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *captureIndex);
 int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex);
@@ -133,20 +121,14 @@ void drawSelector(SDL_Renderer* renderer, uint8_t index);
 
 //Moves
 uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex);
+uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour);
 uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t kingTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t knightTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t bishopTargetSquares(uint8_t* board, uint8_t pieceIndex);
 uint64_t rookTargetSquares(uint8_t* board, uint8_t pieceIndex);
-uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex);
-uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour);
-uint64_t getColourLegalMoves(uint8_t* board, uint8_t colour);
 uint64_t getCastlingSquares(uint8_t* board, uint8_t colour);
-
 void legalMoves(BoardState* boardState);
 
 //Lookup Tables
 void generateKnightLookupTable();
-
-//Test
-//void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count);

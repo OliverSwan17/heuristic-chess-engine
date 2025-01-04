@@ -29,23 +29,6 @@ int main(int argc, char* argv[]) {
     s.moves = NULL;
     s.numberOfLegalmoves = 0;
 
-    /*
-    BoardState *t = malloc(sizeof(BoardState));
-    t->board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
-    t->turn = WHITE;
-    t->castlingSquares = 0;
-    t->wKingIndex = 60;
-    t->bKingIndex = 5;
-    t->halfMoves = 0;
-
-    t->board[t->bKingIndex] = t->board[t->bKingIndex] & 0b11111;
-    t->board[t->wKingIndex] = t->board[t->wKingIndex] & 0b11111;
-    
-    uint64_t count = 0;
-    calculateNumberOfMoves(t, 3, &count);
-    printf("Number of positions: %llu\n", count);
-    */
-    
     highlightedSquares = 0;
     selectionIndex = 0;
     captureIndex = 0;
@@ -295,58 +278,3 @@ int handleMove(BoardState *s, Move *move){
 
     return 0;
 }
-
-/*
-void calculateNumberOfMoves(BoardState *s, uint8_t depth, uint64_t *count){
-    if (depth == 0){
-        *count += 1;
-        return;
-    }
-
-    for (int selectionIndex = 0; selectionIndex < 64; selectionIndex++){
-        if ((COLOUR(s->board[selectionIndex]) != s->turn) || (s->board[selectionIndex] == EMPTY)){
-            continue;
-        }
-
-        uint64_t attackingSquares = getLegalMoves(s->board, selectionIndex);
-        if (KING == (s->board[selectionIndex] & 0b111))
-            attackingSquares |= getCastlingSquares(s->board, s->turn);
-        
-        for (int captureIndex = 0; captureIndex < 64; captureIndex++){
-            if (attackingSquares & (1ULL << captureIndex)){
-                if ((PAWN == (s->board[selectionIndex] & 0b111)) && (RANK(captureIndex) == 1 || RANK(captureIndex) == 8)){
-                    for (int promotionType = 2; promotionType < 6; promotionType++){
-                        BoardState *newPosition = malloc(sizeof(BoardState));
-            
-                        memcpy(newPosition, s, sizeof(BoardState));
-                        newPosition->board = malloc(64);
-                        memcpy(newPosition->board, s->board, 64);
-
-                        if(handleMove(newPosition, selectionIndex, captureIndex, promotionType) == 0){
-                            calculateNumberOfMoves(newPosition, depth - 1, count);
-                        }
-
-                        free(newPosition);
-                    }
-                }else{
-                    BoardState *newPosition = malloc(sizeof(BoardState));
-            
-                    memcpy(newPosition, s, sizeof(BoardState));
-                    newPosition->board = malloc(64);
-                    memcpy(newPosition->board, s->board, 64);
-
-                    if(handleMove(newPosition, selectionIndex, captureIndex, 0) == 0){
-                        calculateNumberOfMoves(newPosition, depth - 1, count);
-                    }
-
-                    free(newPosition);
-                }
-            }
-        
-        }
-
-    }
-
-    return;
-}
-*/

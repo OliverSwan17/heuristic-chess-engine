@@ -1,15 +1,5 @@
 #include "chess.h"
 
-uint64_t getColourLegalMoves(uint8_t* board, uint8_t colour){
-    uint64_t moves = 0;
-    for (int i = 0; i < 64; i++){
-        if(COLOUR(board[i]) == colour)
-            moves |= getLegalMoves(board, i);
-    }
-
-    return moves;
-}
-
 uint64_t getTargetSquares(uint8_t* board, uint8_t pieceIndex){
     uint8_t piece = board[pieceIndex];
     if ((piece & 0b111) == PAWN)
@@ -155,61 +145,6 @@ void legalMoves(BoardState* s){
 
     s->numberOfLegalmoves = moveCount;
     s->moves = moves;
-}
-
-uint64_t getLegalMoves(uint8_t* board, uint8_t pieceIndex){
-    uint8_t piece = board[pieceIndex];
-    uint8_t pieceColour = COLOUR(piece);
-    uint8_t oppositeColour = (pieceColour == 0) ? 1 : 0;
-    uint64_t kingSquare = 0;
-
-    uint64_t legalSquares = 0;
-    uint64_t targetSquares = 0;
-    uint64_t oppositeColourTargetSquares = 0;
-
-    for (int i = 0; i < 64; i++){
-        if(((board[i] & 0b111) == KING) && COLOUR(board[i]) == pieceColour){
-            kingSquare = i;
-            break;
-        }
-    }
-
-    targetSquares = getTargetSquares(board, pieceIndex);
-    uint8_t tempBoard[64];
-
-    for (int i = 0; i < 64; i++){
-        if(targetSquares & (1ULL << i)){
-            memcpy(tempBoard, board, 64);
-            
-            if ((PAWN == (tempBoard[pieceIndex] & 0b111)) && (FILE(pieceIndex) != FILE(i)) && (tempBoard[i] == EMPTY)){
-                if (pieceColour == WHITE){
-                    tempBoard[i] = tempBoard[pieceIndex];
-                    tempBoard[pieceIndex] = EMPTY;
-                    tempBoard[POSTERIOR_SQUARE(i, WHITE_DIRECTION)] = EMPTY;
-                }else{
-                    tempBoard[i] = tempBoard[pieceIndex];
-                    tempBoard[pieceIndex] = EMPTY;
-                    tempBoard[POSTERIOR_SQUARE(i, BLACK_DIRECTION)] = EMPTY;
-                }
-                
-            }else{
-                tempBoard[pieceIndex] = EMPTY;
-                tempBoard[i] = piece;
-            }
-            
-            if((piece & 0b111) == KING){
-                kingSquare = i;
-            }
-
-            oppositeColourTargetSquares = getColourTargetSquares(tempBoard, oppositeColour);
-
-            if(!((oppositeColourTargetSquares >> kingSquare) & 1)){
-                legalSquares |= (1ULL << i);
-            }
-        }
-    }
-
-    return legalSquares;
 }
 
 uint64_t pawnTargetSquares(uint8_t* board, uint8_t pieceIndex){
