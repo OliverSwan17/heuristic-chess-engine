@@ -160,7 +160,7 @@ int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *c
                 if (move == NULL)
                     return 0;
 
-                uint8_t result = handleMove(s, move); // Add functionality for this in the ui later.
+                uint8_t result = handleMove(s, move);
                 if (result == 2)
                     return 0;
                 highlightedSquares = 0;

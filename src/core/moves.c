@@ -54,7 +54,7 @@ void legalMoves(BoardState* s){
         uint8_t piece = board[srcIndex];
 
         // Clearing the en-passant bit.
-        if ((piece & 0b111) == PAWN)
+        if ((piece & 0b111) == PAWN && COLOUR(piece) == s->turn)
             s->board[srcIndex] &= ~0b100000;
 
         if (COLOUR(piece) != s->turn || board[srcIndex] == EMPTY)
