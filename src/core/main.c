@@ -19,7 +19,8 @@ int main(int argc, char* argv[]) {
     uint8_t captureIndex = 0;
 
     BoardState s;
-    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    s.board = fenToArray("4k3/q7/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     //s.board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
     s.turn = WHITE;
     s.castlingSquares = 0;
@@ -143,11 +144,9 @@ int handleEvents(SDL_Event e, BoardState *s, uint8_t *selectionIndex, uint8_t *c
                 if (move == NULL)
                     return 0;
 
-                uint8_t result = handleMove(s, move);
-                if (result == 2)
-                    return 0;
                 highlightedSquares = 0;
-                return result;
+
+                return handleMove(s, move);
             }
             break;
     }
@@ -162,7 +161,6 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
 
     if (s->moves == NULL)
         legalMoves(s);
-
     captureIndex = selectionIndex;
 
     for (int i = 0; i < s->numberOfLegalmoves; i++){
@@ -273,8 +271,34 @@ int handleMove(BoardState *s, Move *move){
             s->bKingIndex = move->dstSquare;
     }
 
-    s->turn = !s->turn;
-    s->moves = NULL;
+    BoardState nextBoard;
+    memcpy(&nextBoard, s, sizeof(BoardState));
+    nextBoard.moves = NULL;
+    nextBoard.turn = !nextBoard.turn;
+    legalMoves(&nextBoard);
 
+    uint8_t kingSquare = (s->turn == 0) ? s->bKingIndex : s->wKingIndex;
+    if (nextBoard.numberOfLegalmoves == 0){
+        for (int i = 0; i < s->numberOfLegalmoves; i++){
+            if ((1ULL << kingSquare) & s->moves[i].dstSquare){
+                printf("Checkmate!");
+                goto end;
+            }
+        }
+        printf("Stalemate");
+        goto end;
+    }
+    
+    free(s->moves);
+    free(nextBoard.moves);
+    s->moves = NULL;
+    s->numberOfLegalmoves = 0;
+    s->turn = !s->turn;
     return 0;
+
+    end:
+    free(s->moves);
+    s->moves = NULL;
+    s->numberOfLegalmoves = 0;
+    return 1;
 }
