@@ -19,16 +19,18 @@ int main(int argc, char* argv[]) {
     uint8_t captureIndex = 0;
 
     BoardState s;
-    s.board = fenToArray("4k3/q7/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    //s.board = fenToArray("4k3/q7/8/8/8/8/PPPPPPPP/RNBQKBNR");
     //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    //s.board = fenToArray("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1");
+    s.board = fenToArray("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8");
     s.turn = WHITE;
     s.castlingSquares = 0;
     s.wKingIndex = 60;
     s.bKingIndex = 4;
     s.halfMoves = 0;
-    s.moves = NULL;
+    s.moves = malloc(256 * sizeof(Move));
     s.numberOfLegalmoves = 0;
+
+    printf("%llu\n", generate(&s, 1));
 
     highlightedSquares = 0;
     selectionIndex = 0;
@@ -159,8 +161,10 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
         return 0;
     }
 
-    if (s->moves == NULL)
-        legalMoves(s);
+    if (s->moves != NULL){
+        free(s->moves);
+    }
+    legalMoves(s);
     captureIndex = selectionIndex;
 
     for (int i = 0; i < s->numberOfLegalmoves; i++){
@@ -179,8 +183,6 @@ int handleSelection(BoardState *s, uint8_t selectionIndex, uint8_t captureIndex)
 int handleMove(BoardState *s, Move *move){
     if (s->turn != COLOUR(s->board[move->srcSquare]) || s->board[move->srcSquare] == EMPTY)
         return 2;
-
-    printf("%u\n", move->type);
 
     // First check for castling
     if (move->type == KING_CASTLE){
@@ -281,24 +283,63 @@ int handleMove(BoardState *s, Move *move){
     if (nextBoard.numberOfLegalmoves == 0){
         for (int i = 0; i < s->numberOfLegalmoves; i++){
             if ((1ULL << kingSquare) & s->moves[i].dstSquare){
-                printf("Checkmate!");
-                goto end;
+                //printf("Checkmate!");
+                return 1;
             }
         }
-        printf("Stalemate");
-        goto end;
+        //printf("Stalemate");
+        return 1;
     }
     
-    free(s->moves);
     free(nextBoard.moves);
-    s->moves = NULL;
-    s->numberOfLegalmoves = 0;
     s->turn = !s->turn;
     return 0;
+}
 
-    end:
-    free(s->moves);
-    s->moves = NULL;
-    s->numberOfLegalmoves = 0;
-    return 1;
+uint64_t generate(BoardState* s, uint64_t depth) {
+    if (depth == 0) {
+        return 1;
+    }
+
+    legalMoves(s);
+    uint64_t numberPos = 0;
+
+    // Create a deep copy of the current BoardState
+    BoardState* copy = malloc(sizeof(BoardState));
+    copy->board = malloc(64);
+    memcpy(copy->board, s->board, 64);
+
+    copy->moves = malloc(256 * sizeof(Move));
+    memcpy(copy->moves, s->moves, 256 * sizeof(Move));
+
+    copy->turn = s->turn;
+    copy->castlingSquares = s->castlingSquares;
+    copy->wKingIndex = s->wKingIndex;
+    copy->bKingIndex = s->bKingIndex;
+    copy->halfMoves = s->halfMoves;
+    copy->numberOfLegalmoves = s->numberOfLegalmoves;
+
+    for (int i = 0; i < s->numberOfLegalmoves; i++) {
+        // Apply the move
+        handleMove(s, &s->moves[i]);
+
+        // Recursive call
+        numberPos += generate(s, depth - 1);
+
+        // Restore the original state
+        memcpy(s->board, copy->board, 64);
+        memcpy(s->moves, copy->moves, 256 * sizeof(Move));
+        s->turn = copy->turn;
+        s->castlingSquares = copy->castlingSquares;
+        s->wKingIndex = copy->wKingIndex;
+        s->bKingIndex = copy->bKingIndex;
+        s->halfMoves = copy->halfMoves;
+        s->numberOfLegalmoves = copy->numberOfLegalmoves;
+    }
+
+    // Free allocated memory for the copy
+    free(copy->board);
+    free(copy->moves);
+    
+    return numberPos;
 }

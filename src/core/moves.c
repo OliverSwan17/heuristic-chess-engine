@@ -31,7 +31,7 @@ uint64_t getColourTargetSquares(uint8_t* board, uint8_t colour){
 }
 
 void legalMoves(BoardState* s){
-    Move *moves = malloc(218 * sizeof(Move));
+    Move *moves = malloc(256 * sizeof(Move));
     uint8_t moveCount = 0;
 
     uint8_t *board = s->board;

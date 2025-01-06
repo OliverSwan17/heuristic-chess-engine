@@ -132,3 +132,6 @@ void legalMoves(BoardState* boardState);
 
 //Lookup Tables
 void generateKnightLookupTable();
+
+//Test
+uint64_t generate(BoardState *s, uint64_t depth);
