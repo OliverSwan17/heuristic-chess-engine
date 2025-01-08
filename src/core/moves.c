@@ -43,12 +43,12 @@ void legalMoves(BoardState* s){
     for (int srcIndex = 0; srcIndex < 64; srcIndex++){
         uint8_t piece = board[srcIndex];
 
+        if (COLOUR(piece) != s->turn || board[srcIndex] == EMPTY)
+            continue;
+
         // Clearing the en-passant bit.
         if ((piece & 0b111) == PAWN && COLOUR(piece) == s->turn)
             s->board[srcIndex] &= ~0b100000;
-
-        if (COLOUR(piece) != s->turn || board[srcIndex] == EMPTY)
-            continue;
 
         uint64_t targetSquares = getTargetSquares(board, srcIndex);
         targetSquares |= s->castlingSquares;
@@ -128,8 +128,9 @@ void legalMoves(BoardState* s){
                         moveType |= 0b11;
                 }
 
-                if (abs(((int) srcIndex) - ((int)dstIndex)) == 16){
+                if ((abs(((int) srcIndex) - ((int)dstIndex)) == 16) && (PAWN == (s->board[srcIndex] & 0b111))){
                     moveType = DOUBLE_PAWN_PUSH;
+                    tempBoard[dstIndex] |= 0b100000;
                 }
 
                 // We require some more advanced checks here as some legal moves are being put through.

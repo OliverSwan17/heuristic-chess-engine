@@ -24,13 +24,13 @@ int main(int argc, char* argv[]) {
     s.board = fenToArray("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8");
     s.turn = WHITE;
     s.castlingSquares = 0;
-    s.wKingIndex = 60;
-    s.bKingIndex = 4;
+    s.wKingIndex = 24; //60 Default
+    s.bKingIndex = 39; // 4 Default
     s.halfMoves = 0;
     s.moves = malloc(256 * sizeof(Move));
     s.numberOfLegalmoves = 0;
 
-    printf("%llu\n", generate(&s, 1));
+    printf("%llu\n", generate(&s, 6));
 
     highlightedSquares = 0;
     selectionIndex = 0;
@@ -262,7 +262,7 @@ int handleMove(BoardState *s, Move *move){
 
     // If the rook just moved, set the 5th bit to indicate that the piece has been moved
     if ((ROOK == (s->board[move->dstSquare] & 0b111)) || (KING == (s->board[move->dstSquare] & 0b111))){
-        s->board[move->dstSquare] |= 1ULL << 5;
+        s->board[move->dstSquare] |= 0b10000;
     }
     
     // Updating the King indexs in the boardstate
@@ -284,10 +284,12 @@ int handleMove(BoardState *s, Move *move){
         for (int i = 0; i < s->numberOfLegalmoves; i++){
             if ((1ULL << kingSquare) & s->moves[i].dstSquare){
                 //printf("Checkmate!");
+                s->turn = !s->turn;
                 return 1;
             }
         }
         //printf("Stalemate");
+        s->turn = !s->turn;
         return 1;
     }
     
@@ -323,8 +325,11 @@ uint64_t generate(BoardState* s, uint64_t depth) {
         // Apply the move
         handleMove(s, &s->moves[i]);
 
-        // Recursive call
-        numberPos += generate(s, depth - 1);
+        // Temporary variable to store positions for this move
+        uint64_t movePos = generate(s, depth - 1);
+
+        // Add to the total number of positions
+        numberPos += movePos;
 
         // Restore the original state
         memcpy(s->board, copy->board, 64);
@@ -335,6 +340,13 @@ uint64_t generate(BoardState* s, uint64_t depth) {
         s->bKingIndex = copy->bKingIndex;
         s->halfMoves = copy->halfMoves;
         s->numberOfLegalmoves = copy->numberOfLegalmoves;
+
+        // Print positions for the current move at depth 5
+        // if (depth == 4)
+        //     printf("Move %c%d%c%d: %llu positions\n",
+        // 'a' + (s->moves[i].srcSquare % 8), 8 - (s->moves[i].srcSquare / 8),
+        // 'a' + (s->moves[i].dstSquare % 8), 8 - (s->moves[i].dstSquare / 8),
+        // movePos);
     }
 
     // Free allocated memory for the copy
@@ -343,3 +355,4 @@ uint64_t generate(BoardState* s, uint64_t depth) {
     
     return numberPos;
 }
+
