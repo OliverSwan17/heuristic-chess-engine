@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     s.numberOfLegalmoves = 0;
     s.board[6] |= 0b10000;
 
-    printf("%llu\n", generate(&s, 3));
+    printf("%llu\n", generate(&s, 4));
 
     highlightedSquares = 0;
     selectionIndex = 0;
@@ -343,11 +343,11 @@ uint64_t generate(BoardState* s, uint64_t depth) {
         s->numberOfLegalmoves = copy->numberOfLegalmoves;
 
         // Print positions for the current move at depth 5
-        // if (depth == 4)
-        //     printf("Move %c%d%c%d: %llu positions\n",
-        // 'a' + (s->moves[i].srcSquare % 8), 8 - (s->moves[i].srcSquare / 8),
-        // 'a' + (s->moves[i].dstSquare % 8), 8 - (s->moves[i].dstSquare / 8),
-        // movePos);
+        //if (depth == 1)
+        //    printf("Move %c%d%c%d: %llu positions\n",
+        //'a' + (s->moves[i].srcSquare % 8), 8 - (s->moves[i].srcSquare / 8),
+        //'a' + (s->moves[i].dstSquare % 8), 8 - (s->moves[i].dstSquare / 8),
+        //movePos);
     }
 
     // Free allocated memory for the copy

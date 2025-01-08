@@ -476,7 +476,7 @@ uint64_t getCastlingSquares(uint8_t* board, uint8_t colour){
         }
         if ((ROOK == (board[56] & 0b111)) && (COLOUR(board[56]) == WHITE) && (!(board[56] & (1 << 5)))) // Checks queenside rook
             if (board[57] == EMPTY && board[58] == EMPTY && board[59] == EMPTY) // Checks if there is empty space inbetween the King and queenside rook
-                if (!(attackedSquares & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59) | (1ULL << 60)))) // Checks if castle is legal.
+                if (!(attackedSquares & ((1ULL << 58) | (1ULL << 59) | (1ULL << 60)))) // Checks if castle is legal.
                     castlingSquares |= (1ULL << 58);
     }
 
