@@ -51,7 +51,9 @@ void legalMoves(BoardState* s){
             s->board[srcIndex] &= ~0b100000;
 
         uint64_t targetSquares = getTargetSquares(board, srcIndex);
-        targetSquares |= s->castlingSquares;
+        
+        if (KING == (0b111 & piece))
+            targetSquares |= s->castlingSquares;
 
         for (int dstIndex = 0; dstIndex < 64; dstIndex++){
             if (targetSquares & (1ULL << dstIndex)) {
@@ -61,7 +63,7 @@ void legalMoves(BoardState* s){
                 memcpy(tempBoard, board, 64);
 
                 // First check for castling
-                if ((s->castlingSquares) && (s->castlingSquares & (1ULL << dstIndex))){
+                if ((s->castlingSquares) && (s->castlingSquares & (1ULL << dstIndex)) && (KING == (0b111 & piece))){
                     if (s->turn == WHITE && srcIndex == 60){
                         if (dstIndex == 62){
                             tempBoard[dstIndex] = tempBoard[60];
@@ -116,18 +118,6 @@ void legalMoves(BoardState* s){
                     kingSquare = dstIndex;
                 }
 
-                // Checking for promotion
-                if (((s->board[dstIndex] & 0b111) == PAWN) && (RANK(dstIndex) == 1 || RANK(dstIndex) == 8)){
-                    moveType |= 0b1000;
-
-                    if ((s->board[srcIndex] & 0b111) == BISHOP)
-                        moveType |= 0b01;
-                    else if ((s->board[srcIndex] & 0b111) == ROOK)
-                        moveType |= 0b10;
-                    else if ((s->board[srcIndex] & 0b111) == QUEEN)
-                        moveType |= 0b11;
-                }
-
                 if ((abs(((int) srcIndex) - ((int)dstIndex)) == 16) && (PAWN == (s->board[srcIndex] & 0b111))){
                     moveType = DOUBLE_PAWN_PUSH;
                     tempBoard[dstIndex] |= 0b100000;
@@ -138,8 +128,40 @@ void legalMoves(BoardState* s){
                     moves[moveCount].type = moveType;
                     moves[moveCount].srcSquare = srcIndex;
                     moves[moveCount].dstSquare = dstIndex;
+
+                    // Checking for promotion
+                    if (((tempBoard[dstIndex] & 0b111) == PAWN) && (RANK(dstIndex) == 1 || RANK(dstIndex) == 8)){
+                        uint8_t type = moves[moveCount].type;
+
+                        moves[moveCount].type |= 0b1000;
+                        moves[moveCount].type |= 0b00; // Knight
+
+                        moveCount += 1;
+                        moves[moveCount].srcSquare = srcIndex;
+                        moves[moveCount].dstSquare = dstIndex;
+                        moves[moveCount].type = type;
+                        moves[moveCount].type |= 0b1000;
+                        moves[moveCount].type |= 0b01; // Bishop
+
+                        moveCount += 1;
+                        moves[moveCount].srcSquare = srcIndex;
+                        moves[moveCount].dstSquare = dstIndex;
+                        moves[moveCount].type = type;
+                        moves[moveCount].type |= 0b1000;
+                        moves[moveCount].type |= 0b10; // Rook
+
+                        moveCount += 1;
+                        moves[moveCount].srcSquare = srcIndex;
+                        moves[moveCount].dstSquare = dstIndex;
+                        moves[moveCount].type = type;
+                        moves[moveCount].type |= 0b1000;
+                        moves[moveCount].type |= 0b11; // Rook
+                    }
+
                     moveCount += 1;
                 }
+
+    
             }
         }
     }

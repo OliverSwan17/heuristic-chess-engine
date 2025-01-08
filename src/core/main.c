@@ -21,16 +21,17 @@ int main(int argc, char* argv[]) {
     BoardState s;
     //s.board = fenToArray("4k3/q7/8/8/8/8/PPPPPPPP/RNBQKBNR");
     //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    s.board = fenToArray("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8");
-    s.turn = WHITE;
+    s.board = fenToArray("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R");
+    s.turn = BLACK;
     s.castlingSquares = 0;
-    s.wKingIndex = 24; //60 Default
-    s.bKingIndex = 39; // 4 Default
+    s.wKingIndex = 60; //60 Default
+    s.bKingIndex = 6; // 4 Default
     s.halfMoves = 0;
     s.moves = malloc(256 * sizeof(Move));
     s.numberOfLegalmoves = 0;
+    s.board[6] |= 0b10000;
 
-    printf("%llu\n", generate(&s, 6));
+    printf("%llu\n", generate(&s, 3));
 
     highlightedSquares = 0;
     selectionIndex = 0;
