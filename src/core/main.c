@@ -19,19 +19,22 @@ int main(int argc, char* argv[]) {
     uint8_t captureIndex = 0;
 
     BoardState s;
-    //s.board = fenToArray("4k3/q7/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    //s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    s.board = fenToArray("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R");
-    s.turn = BLACK;
+    s.board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    s.turn = WHITE;
     s.castlingSquares = 0;
-    s.wKingIndex = 60; //60 Default
-    s.bKingIndex = 6; // 4 Default
+
     s.halfMoves = 0;
     s.moves = malloc(256 * sizeof(Move));
     s.numberOfLegalmoves = 0;
-    s.board[6] |= 0b10000;
+    
+    for (int i = 0; i < 64; i++){
+        if (COLOUR(s.board[i]) == WHITE && (s.board[i] & 0b111) == KING)
+            s.wKingIndex = i;
+        else if (COLOUR(s.board[i]) == BLACK && (s.board[i] & 0b111) == KING)
+            s.bKingIndex = i;
+    }
 
-    printf("%llu\n", generate(&s, 4));
+    //printf("%llu\n", generate(&s, 3));
 
     highlightedSquares = 0;
     selectionIndex = 0;
@@ -261,8 +264,9 @@ int handleMove(BoardState *s, Move *move){
     #endif
     #endif
 
-    // If the rook just moved, set the 5th bit to indicate that the piece has been moved
-    if ((ROOK == (s->board[move->dstSquare] & 0b111)) || (KING == (s->board[move->dstSquare] & 0b111))){
+    // If the rook or king just moved, set the 5th bit to indicate that the piece has been moved
+    if ((ROOK == ((s->board[move->dstSquare]) & 0b111)) || (KING == ((s->board[move->dstSquare]) & 0b111))){
+        printf("Nigger");
         s->board[move->dstSquare] |= 0b10000;
     }
     
@@ -342,12 +346,12 @@ uint64_t generate(BoardState* s, uint64_t depth) {
         s->halfMoves = copy->halfMoves;
         s->numberOfLegalmoves = copy->numberOfLegalmoves;
 
-        // Print positions for the current move at depth 5
-        //if (depth == 1)
-        //    printf("Move %c%d%c%d: %llu positions\n",
-        //'a' + (s->moves[i].srcSquare % 8), 8 - (s->moves[i].srcSquare / 8),
-        //'a' + (s->moves[i].dstSquare % 8), 8 - (s->moves[i].dstSquare / 8),
-        //movePos);
+        //Print positions for the current move at depth 5
+        if (depth == 3)
+            printf("Move %c%d%c%d: %llu positions\n",
+        'a' + (s->moves[i].srcSquare % 8), 8 - (s->moves[i].srcSquare / 8),
+        'a' + (s->moves[i].dstSquare % 8), 8 - (s->moves[i].dstSquare / 8),
+        movePos);
     }
 
     // Free allocated memory for the copy
