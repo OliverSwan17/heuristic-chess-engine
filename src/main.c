@@ -2,7 +2,6 @@
 
 int main(int argc, char* argv[]) {
     unsigned char* board = fenToArray("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-    printBoard(board);
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -35,7 +34,7 @@ int main(int argc, char* argv[]) {
 
         SDL_RenderClear(renderer);
         drawSquares(renderer);
-        drawPieces(renderer, board, WHITE_DIRECTION);
+        drawPieces(renderer, board);
         SDL_RenderPresent(renderer);
     }
 

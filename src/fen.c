@@ -1,18 +1,18 @@
 #include "chess.h"
 // Refactor this to use ENUMS
 const unsigned char pieceLookupTable[256] = {
-    ['p'] = B_PAWN,
-    ['n'] = B_KNIGHT,
-    ['b'] = B_BISHOP,
-    ['r'] = B_ROOK,
-    ['q'] = B_QUEEN,
-    ['k'] = B_KING,
-    ['P'] = W_PAWN,
-    ['N'] = W_KNIGHT,
-    ['B'] = W_BISHOP,
-    ['R'] = W_ROOK,
-    ['Q'] = W_QUEEN,
-    ['K'] = W_KING
+    ['p'] = 1,
+    ['n'] = 2,
+    ['b'] = 3,
+    ['r'] = 4,
+    ['q'] = 5,
+    ['k'] = 6,
+    ['P'] = 9,
+    ['N'] = 10,
+    ['B'] = 11,
+    ['R'] = 12,
+    ['Q'] = 13,
+    ['K'] = 14
 };
 
 unsigned char* fenToArray(char* fen){
@@ -37,13 +37,4 @@ unsigned char* fenToArray(char* fen){
     }
 
     return board;
-}
-
-void printBoard(unsigned char *board){
-    for (int i = 0; i < 64; i++) {
-        printf("%i ", board[i]);
-        if ((i + 1) % 8 == 0)
-            printf("\n");
-    }
-    printf("\n");
 }
