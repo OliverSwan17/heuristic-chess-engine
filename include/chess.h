@@ -4,11 +4,40 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_main.h>
 #include <SDL2/SDL_image.h>
+#include <stdint.h>
 
 //Screen Constants
 #define SCREEN_LENGTH 800
 #define SCREEN_HEIGHT 800
 #define SQUARE_SIZE (int) SCREEN_LENGTH / 8
+
+//Misc
+#define FILE(i) (((i) % 8) + 1)
+#define RANK(i) (abs(((i) + 1 + 8 - 1) / 8 - 9))
+#define WHITE (0)
+#define BLACK (1)
+
+// Bitboards
+typedef uint64_t Bitboard;
+
+typedef struct {
+    Bitboard pieces[13];
+} Board;
+
+enum PieceType {
+    W_PAWN,
+    W_KNIGHT,
+    W_BISHOP,
+    W_ROOK,
+    W_QUEEN,
+    W_KING,
+    B_PAWN,
+    B_KNIGHT,
+    B_BISHOP,
+    B_ROOK,
+    B_QUEEN,
+    B_KING,
+};
 
 //Fen
 unsigned char* fenToArray(char* fen);
@@ -18,21 +47,9 @@ extern const unsigned char pieceLookupTable[256];
 //Draw
 void initRectangles();
 void drawSquares(SDL_Renderer* renderer);
-void drawPieces(SDL_Renderer* renderer, unsigned char* board);
+void drawPieces(SDL_Renderer* renderer, Board *board);
 void initPiecesTexture(SDL_Renderer* renderer);
 
-// Bitboards
-typedef uint64_t Bitboard;
-
-typedef struct {
-    Bitboard pieces[2][6];
-} ChessBoard;
-
-enum PieceType {
-    PAWN,
-    KNIGHT,
-    BISHOP,
-    ROOK,
-    QUEEN,
-    KING
-};
+// Moves
+void generateKnightMoveTable();
+void knightMoves(Bitboard knights, uint16_t *moves, uint8_t *moveNumber);

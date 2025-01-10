@@ -25,32 +25,22 @@ void initRectangles() {
         }
     }
 
-    // Would have been easier to put black first on the sprite sheet but oh well.
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 6; j++) {
-            piecesRects[(1 - i) * 6 + j] = (SDL_Rect*)malloc(sizeof(SDL_Rect));
-            piecesRects[(1 - i) * 6 + j]->x = 20 * j + 20 * 6 * i;
-            piecesRects[(1 - i) * 6 + j]->y = 0;
-            piecesRects[(1 - i) * 6 + j]->w = 20;
-            piecesRects[(1 - i) * 6 + j]->h = 20;
-        }
+    for (int i = 0; i < 12; i++){
+        piecesRects[i] = (SDL_Rect*)malloc(sizeof(SDL_Rect));
+        piecesRects[i]->x = 20 * i;
+        piecesRects[i]->y = 0;
+        piecesRects[i]->w = 20;
+        piecesRects[i]->h = 20;
     }
 }
 
-void drawPieces(SDL_Renderer* renderer, unsigned char* board) {
-    for (int y = 0; y < 8; y++) {
-        for (int x = 0; x < 8; x++) {
-            // The spritesheet contains all 12 piece types in a single row, where each piece type
-            // has a unique value as defined in chess.h: pawn = 1, knight = 2, bishop = 3, and so on.
-            // For white pieces, the value is offset by 8 (e.g., a white pawn has a value of 9).
-            // This makes it easy to distinguish piece colors based on their value by checking the 3rd bit.
-            // Therfore, when indexing the spritesheet for white pieces we need to subtract 2 from the value of the white piece.
-            // For example, the 7th piece on the spritesheet is the white pawn but a white pawn is represented by 9.
-            // So we subtract by 2. This works for all of the white pieces. 
-
-            int spriteOffset = board[y * 8 + x] - 1 + ((board[y * 8 + x] & (1 << 3)) ? -2 : 0);
-            SDL_Rect destinationRect = {x * SQUARE_SIZE, y * SQUARE_SIZE, 100, 100};
-            SDL_RenderCopy(renderer, piecesTexture, piecesRects[spriteOffset], &destinationRect);
+void drawPieces(SDL_Renderer* renderer, Board *board) {
+    for (int i = 0; i < 12; i++){
+        for (int j = 0; j < 64; j++){
+            if (board->pieces[i] & (1Ull << j)){
+                SDL_Rect destinationRect = {j % 8 * SQUARE_SIZE, j / 8 * SQUARE_SIZE, 100, 100};
+                SDL_RenderCopy(renderer, piecesTexture, piecesRects[i], &destinationRect);
+            }
         }
     }
 }
