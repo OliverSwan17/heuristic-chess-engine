@@ -22,6 +22,8 @@ typedef uint64_t Bitboard;
 
 typedef struct {
     Bitboard pieces[13];
+    Bitboard wPieces;
+    Bitboard bPieces;
 } Board;
 
 enum PieceType {
@@ -49,7 +51,15 @@ void initRectangles();
 void drawSquares(SDL_Renderer* renderer);
 void drawPieces(SDL_Renderer* renderer, Board *board);
 void initPiecesTexture(SDL_Renderer* renderer);
+void drawHighlightedSquares(Bitboard squares, SDL_Renderer* renderer);
+
 
 // Moves
 void generateKnightMoveTable();
-void knightMoves(Bitboard knights, uint16_t *moves, uint8_t *moveNumber);
+void generateKingMoveTable();
+
+void knightMoves(Bitboard knights, Bitboard colouredPieces, uint16_t *moves, uint8_t *moveNumber);
+void kingMoves(Bitboard kings, uint16_t *moves, uint8_t *moveNumber);
+
+void printMoves(uint16_t *moves, uint8_t moveNumber);
+

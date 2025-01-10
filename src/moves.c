@@ -1,6 +1,7 @@
 #include "chess.h"
 
 uint64_t knightMoveTable[64];
+uint64_t kingMoveTable[64];
 
 void generateKnightMoveTable(){
     uint64_t squares = 0;
@@ -46,7 +47,24 @@ void generateKnightMoveTable(){
     }
 }
 
-void knightMoves(Bitboard knights, uint16_t *moves, uint8_t *moveNumber) {
+void generateKingMoveTable(){
+    for (int i = 0; i < 64; i++){
+        uint64_t kingSquares = 0;
+
+        if (i < 56)
+            kingSquares |= (1ULL << (i + 8));
+        if (i > 7)
+            kingSquares |= (1ULL << (i - 8));
+        if (i % 8)
+            kingSquares |= (1ULL << (i - 1));
+        if (i % 8 != 0)
+            kingSquares |= (1ULL << (i + 1));
+
+        kingMoveTable[i] = kingSquares;
+    }
+}
+
+void knightMoves(Bitboard knights, Bitboard colouredPieces, uint16_t *moves, uint8_t *moveNumber) {
     uint8_t i = 0;
     while (knights) {
         i = __builtin_ffsll(knights) - 1;
@@ -55,10 +73,12 @@ void knightMoves(Bitboard knights, uint16_t *moves, uint8_t *moveNumber) {
         while (attackingSquares) {
             uint8_t j = __builtin_ffsll(attackingSquares) - 1;
             
-            // Store the move (from square + to square)
-            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            
+            if (!((1ULL << j) & colouredPieces)){
+                // Store the move (from square + to square)
+                moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+                (*moveNumber)++;
+            }
+
             // Pop the attacking squares bitboards LS1B
             attackingSquares &= attackingSquares - 1;
         }
@@ -66,8 +86,25 @@ void knightMoves(Bitboard knights, uint16_t *moves, uint8_t *moveNumber) {
         // Pop the knight bitboards LS1B
         knights &= knights - 1;
     }
+}
 
-    for (int i = 0; i < *moveNumber; i++){
+void kingMoves(Bitboard kings, uint16_t *moves, uint8_t *moveNumber) {
+    uint8_t kingIndex = __builtin_ffsll(kings) - 1;
+    Bitboard attackingSquares = kingMoveTable[kingIndex];
+    while (attackingSquares){
+        uint8_t targetSquare = __builtin_ffsll(attackingSquares) - 1;
+        
+        // Store the move (from square + to square)
+        moves[*moveNumber] = (uint16_t)((kingIndex & 0b111111) | ((targetSquare & 0b111111) << 6));
+        (*moveNumber)++;
+        
+        // Pop the attacking squares bitboards LS1B
+        attackingSquares &= attackingSquares - 1;
+    }
+}
+
+void printMoves(uint16_t *moves, uint8_t moveNumber){
+     for (int i = 0; i < moveNumber; i++){
         printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6); 
     }
 }

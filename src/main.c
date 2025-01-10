@@ -9,6 +9,7 @@ int main(int argc, char* argv[]) {
     board.pieces[W_ROOK]     = 0b0000000000000000000000000000000000000000000000000000000010000001;
     board.pieces[W_QUEEN]    = 0b0000000000000000000000000000000000000000000000000000000000010000;
     board.pieces[W_KING]     = 0b0000000000000000000000000000000000000000000000000000000000001000;
+    board.wPieces = board.pieces[W_PAWN] | board.pieces[W_KNIGHT] | board.pieces[W_BISHOP] | board.pieces[W_ROOK] | board.pieces[W_QUEEN] | board.pieces[W_KING];
 
     board.pieces[B_PAWN]     = 0b0000000011111111000000000000000000000000000000000000000000000000;
     board.pieces[B_KNIGHT]   = 0b0100001000000000000000000000000000000000000000000000000000000000;
@@ -16,15 +17,22 @@ int main(int argc, char* argv[]) {
     board.pieces[B_ROOK]     = 0b1000000100000000000000000000000000000000000000000000000000000000;
     board.pieces[B_QUEEN]    = 0b0001000000000000000000000000000000000000000000000000000000000000;
     board.pieces[B_KING]     = 0b0000100000000000000000000000000000000000000000000000000000000000;
+    board.bPieces = board.pieces[B_PAWN] | board.pieces[B_KNIGHT] | board.pieces[B_BISHOP] | board.pieces[B_ROOK] | board.pieces[B_QUEEN] | board.pieces[B_KING];
 
     generateKnightMoveTable();
+    generateKingMoveTable();
 
     uint16_t *moves = malloc(256 * sizeof(uint16_t));
     memset(moves, 0, 256 * sizeof(uint16_t));
+
     uint8_t numMoves = 0;
-    knightMoves(board.pieces[W_KNIGHT], moves, &numMoves);
+    knightMoves(board.pieces[W_KNIGHT], board.wPieces, moves, &numMoves);
+    printMoves(moves, numMoves);
 
-
+    Bitboard attackingSquares = 0;
+    for (int i = 0; i < numMoves; i++){
+        attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
+    }
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -58,6 +66,7 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
         drawSquares(renderer);
         drawPieces(renderer, &board);
+        drawHighlightedSquares(attackingSquares, renderer);
         SDL_RenderPresent(renderer);
     }
 
