@@ -1,7 +1,3 @@
 .vscode/
 chess.exe
 chess
-obj/*
-obj/draw.o
-obj/fen.o
-obj/main.o
