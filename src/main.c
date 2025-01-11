@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     memset(moves, 0, 256 * sizeof(uint16_t));
 
     uint8_t numMoves = 0;
-    pawnMoves(board.pieces[W_PAWN], board.wPieces, moves, &numMoves, WHITE);
+    knightMoves(board.pieces[W_KNIGHT], board.wPieces, moves, &numMoves);
     printMoves(moves, numMoves);
 
     Bitboard attackingSquares = 0;

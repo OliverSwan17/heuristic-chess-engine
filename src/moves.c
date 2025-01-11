@@ -102,17 +102,15 @@ void knightMoves(Bitboard knights, Bitboard colouredPieces, uint16_t *moves, uin
     uint8_t i = 0;
     while (knights) {
         i = __builtin_ffsll(knights) - 1;
-        Bitboard attackingSquares = knightAttackMap[i];
+        Bitboard attackingSquares = knightAttackMap[i] &~ colouredPieces;
         
         while (attackingSquares) {
             uint8_t j = __builtin_ffsll(attackingSquares) - 1;
             
-            if (!((1ULL << j) & colouredPieces)) {
-                // Store the move (from square + to square)
-                moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
-                (*moveNumber)++;
-            }
-
+            // Store the move (from square + to square)
+            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+            (*moveNumber)++;
+            
             // Pop the attacking squares bitboards LS1B
             attackingSquares &= attackingSquares - 1;
         }
@@ -126,17 +124,15 @@ void kingMoves(Bitboard kings, Bitboard colouredPieces, uint16_t *moves, uint8_t
     uint8_t i = 0;
     while (kings) {
         i = __builtin_ffsll(kings) - 1;
-        Bitboard attackingSquares = kingAttackMap[i];
+        Bitboard attackingSquares = kingAttackMap[i] &~ colouredPieces;
         
         while (attackingSquares) {
             uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            
-            if (!((1ULL << j) & colouredPieces)) {
-                // Store the move (from square + to square)
-                moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
-                (*moveNumber)++;
-            }
 
+            // Store the move (from square + to square)
+            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+            (*moveNumber)++;
+            
             // Pop the attacking squares bitboards LS1B
             attackingSquares &= attackingSquares - 1;
         }
@@ -150,17 +146,15 @@ void pawnMoves(Bitboard pawns, Bitboard colouredPieces, uint16_t *moves, uint8_t
     uint8_t i = 0;
     while (pawns) {
         i = __builtin_ffsll(pawns) - 1;
-        Bitboard attackingSquares = pawnAttackMap[colour][i];
+        Bitboard attackingSquares = pawnAttackMap[colour][i] &~ colouredPieces;
         
         while (attackingSquares) {
             uint8_t j = __builtin_ffsll(attackingSquares) - 1;
             
-            if (!((1ULL << j) & colouredPieces)) {
-                // Store the move (from square + to square)
-                moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
-                (*moveNumber)++;
-            }
-
+            // Store the move (from square + to square)
+            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+            (*moveNumber)++;
+            
             // Pop the attacking squares bitboards LS1B
             attackingSquares &= attackingSquares - 1;
         }
