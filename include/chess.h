@@ -57,9 +57,11 @@ void drawHighlightedSquares(Bitboard squares, SDL_Renderer* renderer);
 // Moves
 void generateKnightAttackMap();
 void generateKingAttackMap();
+void generatePawnAttackMap();
 
 void knightMoves(Bitboard knights, Bitboard colouredPieces, uint16_t *moves, uint8_t *moveNumber);
 void kingMoves(Bitboard kings, Bitboard colouredPieces, uint16_t *moves, uint8_t *moveNumber);
+void pawnMoves(Bitboard pawns, Bitboard colouredPieces, uint16_t *moves, uint8_t *moveNumber, uint8_t colour);
 
 void printMoves(uint16_t *moves, uint8_t moveNumber);
 

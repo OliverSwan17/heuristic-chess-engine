@@ -21,14 +21,13 @@ int main(int argc, char* argv[]) {
 
     generateKnightAttackMap();
     generateKingAttackMap();
+    generatePawnAttackMap();
 
     uint16_t *moves = malloc(256 * sizeof(uint16_t));
     memset(moves, 0, 256 * sizeof(uint16_t));
 
-
-    board.pieces[W_KING] <<= 24;
     uint8_t numMoves = 0;
-    kingMoves(board.pieces[W_KING], board.wPieces, moves, &numMoves);
+    pawnMoves(board.pieces[W_PAWN], board.wPieces, moves, &numMoves, WHITE);
     printMoves(moves, numMoves);
 
     Bitboard attackingSquares = 0;
