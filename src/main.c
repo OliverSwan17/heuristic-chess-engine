@@ -19,14 +19,16 @@ int main(int argc, char* argv[]) {
     board.pieces[B_KING]     = 0b0000100000000000000000000000000000000000000000000000000000000000;
     board.bPieces = board.pieces[B_PAWN] | board.pieces[B_KNIGHT] | board.pieces[B_BISHOP] | board.pieces[B_ROOK] | board.pieces[B_QUEEN] | board.pieces[B_KING];
 
-    generateKnightMoveTable();
-    generateKingMoveTable();
+    generateKnightAttackMap();
+    generateKingAttackMap();
 
     uint16_t *moves = malloc(256 * sizeof(uint16_t));
     memset(moves, 0, 256 * sizeof(uint16_t));
 
+
+    board.pieces[W_KING] <<= 24;
     uint8_t numMoves = 0;
-    knightMoves(board.pieces[W_KNIGHT], board.wPieces, moves, &numMoves);
+    kingMoves(board.pieces[W_KING], board.wPieces, moves, &numMoves);
     printMoves(moves, numMoves);
 
     Bitboard attackingSquares = 0;
