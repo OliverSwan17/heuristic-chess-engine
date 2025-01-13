@@ -23,17 +23,21 @@ int main(int argc, char* argv[]) {
     generateKingAttackMap();
     generatePawnAttackMap();
 
+    uint8_t moveNumber = 0;
     uint16_t *moves = malloc(256 * sizeof(uint16_t));
     memset(moves, 0, 256 * sizeof(uint16_t));
 
-    uint8_t numMoves = 0;
-    knightMoves(board.pieces[W_KNIGHT], board.wPieces, moves, &numMoves);
-    printMoves(moves, numMoves);
+    getMoves(&board, moves, &moveNumber);
+
+    printMoves(moves, moveNumber);
 
     Bitboard attackingSquares = 0;
-    for (int i = 0; i < numMoves; i++){
-        attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
+    u8 pieceType = W_KNIGHT;
+    for (int i = 0; i < moveNumber; i++){
+        if (board.pieces[pieceType] & (1ULL << (moves[i] & 0b111111)))
+            attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
     }
+
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
@@ -80,4 +84,13 @@ int main(int argc, char* argv[]) {
     printf("ERROR! %s\n", SDL_GetError());
     SDL_Quit();
     return 1;
+}
+
+void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
+    knightMoves(board->pieces[W_KNIGHT], board->wPieces, moves, moveNumber);
+    knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
+    kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
+    kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
+    pawnMoves(board->pieces[W_PAWN], board->wPieces, moves, moveNumber, WHITE);
+    pawnMoves(board->pieces[B_PAWN], board->bPieces, moves, moveNumber, BLACK);
 }

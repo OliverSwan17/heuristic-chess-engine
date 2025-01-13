@@ -19,9 +19,11 @@
 
 // Bitboards
 typedef uint64_t Bitboard;
+typedef uint8_t u8;
+typedef uint16_t u16;
 
 typedef struct {
-    Bitboard pieces[13];
+    Bitboard pieces[12];
     Bitboard wPieces;
     Bitboard bPieces;
 } Board;
@@ -64,4 +66,7 @@ void kingMoves(Bitboard kings, Bitboard colouredPieces, uint16_t *moves, uint8_t
 void pawnMoves(Bitboard pawns, Bitboard colouredPieces, uint16_t *moves, uint8_t *moveNumber, uint8_t colour);
 
 void printMoves(uint16_t *moves, uint8_t moveNumber);
+
+// Main
+void getMoves(Board *board, u16 *moves, u8 *moveNumber);
 
