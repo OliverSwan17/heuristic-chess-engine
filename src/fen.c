@@ -1,27 +1,24 @@
 #include "chess.h"
 // Refactor this to use ENUMS
 const unsigned char pieceLookupTable[256] = {
-    ['p'] = 1,
-    ['n'] = 2,
-    ['b'] = 3,
-    ['r'] = 4,
-    ['q'] = 5,
-    ['k'] = 6,
-    ['P'] = 9,
-    ['N'] = 10,
-    ['B'] = 11,
-    ['R'] = 12,
-    ['Q'] = 13,
-    ['K'] = 14
+    ['p'] = B_PAWN,
+    ['n'] = B_KNIGHT,
+    ['b'] = B_BISHOP,
+    ['r'] = B_ROOK,
+    ['q'] = B_QUEEN,
+    ['k'] = B_KING,
+    ['P'] = W_PAWN,
+    ['N'] = W_KNIGHT,
+    ['B'] = W_BISHOP,
+    ['R'] = W_ROOK,
+    ['Q'] = W_QUEEN,
+    ['K'] = W_KING,
 };
 
-unsigned char* fenToArray(char* fen){
-    unsigned char* board = (unsigned char*)malloc(64 * sizeof(unsigned char));
-    if (board == NULL) {
-        printf("Memory allocation failed!");
-        exit(1);
-    }
-    memset(board, 0, 64 * sizeof(char));
+void fenToBoard(char *fen, Board *board) {
+    memset(&board->pieces, 0, sizeof(Bitboard) * 12);
+    memset(&board->wPieces, 0, sizeof(Bitboard));
+    memset(&board->bPieces, 0, sizeof(Bitboard));
 
     int i = 0;
     unsigned char fenChar;
@@ -30,11 +27,13 @@ unsigned char* fenToArray(char* fen){
             i += fenChar - 48;
         }
         else if(fenChar != '/'){
-            *(board + i) = *(pieceLookupTable + fenChar);
+            board->pieces[pieceLookupTable[fenChar]] |= (1ULL << (63 - i));
             i += 1;
         }
         fen++;
     }
-
-    return board;
+    
+    board->wPieces = board->pieces[W_PAWN] | board->pieces[W_KNIGHT] | board->pieces[W_BISHOP] | board->pieces[W_ROOK] | board->pieces[W_QUEEN] | board->pieces[W_KING];
+    board->bPieces = board->pieces[B_PAWN] | board->pieces[B_KNIGHT] | board->pieces[B_BISHOP] | board->pieces[B_ROOK] | board->pieces[B_QUEEN] | board->pieces[B_KING];
 }
+

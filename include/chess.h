@@ -44,8 +44,7 @@ enum PieceType {
 };
 
 //Fen
-unsigned char* fenToArray(char* fen);
-void printBoard(unsigned char *board);
+void fenToBoard(char *fen, Board *board);
 extern const unsigned char pieceLookupTable[256];
 
 //Draw

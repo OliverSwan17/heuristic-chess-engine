@@ -1,41 +1,29 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
+    char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
     Board board;
-    memset(&board.pieces, 0, sizeof(Bitboard) * 12);
-    board.pieces[W_PAWN]     = 0b0000000000000000000000000000000000000000000000001111111100000000;
-    board.pieces[W_KNIGHT]   = 0b0000000000000000000000000000000000000000000000000000000001000010;
-    board.pieces[W_BISHOP]   = 0b0000000000000000000000000000000000000000000000000000000000100100;
-    board.pieces[W_ROOK]     = 0b0000000000000000000000000000000000000000000000000000000010000001;
-    board.pieces[W_QUEEN]    = 0b0000000000000000000000000000000000000000000000000000000000010000;
-    board.pieces[W_KING]     = 0b0000000000000000000000000000000000000000000000000000000000001000;
-    board.wPieces = board.pieces[W_PAWN] | board.pieces[W_KNIGHT] | board.pieces[W_BISHOP] | board.pieces[W_ROOK] | board.pieces[W_QUEEN] | board.pieces[W_KING];
-
-    board.pieces[B_PAWN]     = 0b0000000011111111000000000000000000000000000000000000000000000000;
-    board.pieces[B_KNIGHT]   = 0b0100001000000000000000000000000000000000000000000000000000000000;
-    board.pieces[B_BISHOP]   = 0b0010010000000000000000000000000000000000000000000000000000000000;
-    board.pieces[B_ROOK]     = 0b1000000100000000000000000000000000000000000000000000000000000000;
-    board.pieces[B_QUEEN]    = 0b0001000000000000000000000000000000000000000000000000000000000000;
-    board.pieces[B_KING]     = 0b0000100000000000000000000000000000000000000000000000000000000000;
-    board.bPieces = board.pieces[B_PAWN] | board.pieces[B_KNIGHT] | board.pieces[B_BISHOP] | board.pieces[B_ROOK] | board.pieces[B_QUEEN] | board.pieces[B_KING];
-
+    fenToBoard(fen, &board);
+    
     generateKnightAttackMap();
     generateKingAttackMap();
     generatePawnAttackMap();
 
     uint8_t moveNumber = 0;
-    uint16_t *moves = malloc(256 * sizeof(uint16_t));
-    memset(moves, 0, 256 * sizeof(uint16_t));
+    uint16_t *moves = malloc(256 * sizeof(u16));
+    memset(moves, 0, 256 * sizeof(u16));
 
     getMoves(&board, moves, &moveNumber);
 
-    printMoves(moves, moveNumber);
+    //printMoves(moves, moveNumber);
 
     Bitboard attackingSquares = 0;
     u8 pieceType = W_KNIGHT;
     for (int i = 0; i < moveNumber; i++){
-        if (board.pieces[pieceType] & (1ULL << (moves[i] & 0b111111)))
+        if (board.pieces[pieceType] & (1ULL << (moves[i] & 0b111111))){
             attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
+            printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6);
+        }
     }
 
     
