@@ -9,8 +9,8 @@ int main(int argc, char* argv[]) {
     generateKingAttackMap();
     generatePawnAttackMap();
 
-    uint8_t moveNumber = 0;
-    uint16_t *moves = malloc(256 * sizeof(u16));
+    u8 moveNumber = 0;
+    u16 *moves = malloc(256 * sizeof(u16));
     memset(moves, 0, 256 * sizeof(u16));
 
     getMoves(&board, moves, &moveNumber);

@@ -1,13 +1,14 @@
 #include "chess.h"
 
-uint64_t knightAttackMap[64];
-uint64_t kingAttackMap[64];
-uint64_t pawnAttackMap[2][64];
+Bitboard knightAttackMap[64];
+Bitboard kingAttackMap[64];
+Bitboard pawnAttackMap[2][64];
+Bitboard rookBlockerMask[64];
 
 void generateKnightAttackMap() {
-    uint64_t squares = 0;
-    uint8_t rank = 0;
-    uint8_t file = 0;
+    Bitboard squares = 0;
+    u8 rank = 0;
+    u8 file = 0;
 
     for (int i = 0; i < 64; i++) {
         squares = 0;
@@ -50,7 +51,7 @@ void generateKnightAttackMap() {
 
 void generateKingAttackMap() {
     for (int i = 0; i < 64; i++) {
-        uint64_t kingSquares = 0;
+        Bitboard kingSquares = 0;
 
         if (i < 56)
             kingSquares |= (1ULL << (i + 8));
@@ -98,14 +99,18 @@ void generatePawnAttackMap() {
     }
 }
 
+void generateRookBlockerMask() {
+
+}
+
 void knightMoves(Bitboard knights, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber) {
-    uint8_t i = 0;
+    u8 i = 0;
     while (knights) {
         i = __builtin_ffsll(knights) - 1;
         Bitboard attackingSquares = knightAttackMap[i] &~ friendlyColour;
         while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+            u8 j = __builtin_ffsll(attackingSquares) - 1;
+            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
             (*moveNumber)++;
             attackingSquares &= attackingSquares - 1;
         }
@@ -113,14 +118,14 @@ void knightMoves(Bitboard knights, Bitboard friendlyColour, uint16_t *moves, uin
     }
 }
 
-void kingMoves(Bitboard kings, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber) {
+void kingMoves(Bitboard kings, Bitboard friendlyColour, u16 *moves, u8 *moveNumber) {
     uint8_t i = 0;
     while (kings) {
         i = __builtin_ffsll(kings) - 1;
         Bitboard attackingSquares = kingAttackMap[i] &~ friendlyColour;
         while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+            u8 j = __builtin_ffsll(attackingSquares) - 1;
+            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
             (*moveNumber)++;
             attackingSquares &= attackingSquares - 1;
         }
@@ -128,14 +133,14 @@ void kingMoves(Bitboard kings, Bitboard friendlyColour, uint16_t *moves, uint8_t
     }
 }
 
-void pawnMoves(Bitboard pawns, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber, uint8_t colour) {
+void pawnMoves(Bitboard pawns, Bitboard friendlyColour, u16 *moves, u8 *moveNumber, u8 colour) {
     uint8_t i = 0;
     while (pawns) {
         i = __builtin_ffsll(pawns) - 1;
         Bitboard attackingSquares = pawnAttackMap[colour][i] &~ friendlyColour;
         while (attackingSquares) {
             uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (uint16_t)((i & 0b111111) | ((j & 0b111111) << 6));
+            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
             (*moveNumber)++;
             attackingSquares &= attackingSquares - 1;
         }
@@ -143,7 +148,7 @@ void pawnMoves(Bitboard pawns, Bitboard friendlyColour, uint16_t *moves, uint8_t
     }
 }
 
-void printMoves(uint16_t *moves, uint8_t moveNumber) {
+void printMoves(u16 *moves, u8 moveNumber) {
      for (int i = 0; i < moveNumber; i++) {
         printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6); 
     }
