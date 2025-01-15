@@ -5,6 +5,7 @@
 #include <SDL2/SDL_main.h>
 #include <SDL2/SDL_image.h>
 #include <stdint.h>
+#include <time.h>
 
 //Screen Constants
 #define SCREEN_LENGTH 800
@@ -21,6 +22,8 @@
 typedef uint64_t Bitboard;
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint64_t u64;
+
 
 typedef struct {
     Bitboard pieces[12];
@@ -60,6 +63,7 @@ void generateKnightAttackMap();
 void generateKingAttackMap();
 void generatePawnAttackMap();
 void generateRookBlockerMask();
+u64 generateRandomU64();
 
 void knightMoves(Bitboard knights, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
 void kingMoves(Bitboard kings, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);

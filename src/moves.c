@@ -144,6 +144,39 @@ void generateRookBlockerMask() {
     for (int i = 0; i < 64; i++) {
         printf("%llu\n", rookBlockerMask[i]);
     }
+
+    srand((unsigned int)time(NULL));
+
+    u64 magics[64];
+    u8 shifts[64];
+    for (int i = 0; i < 64; i++) {
+        shifts[i] = 48;
+    }
+
+    for (int i = 0; i < 64; i++) {
+        u64 magic = generateRandomU64();
+        u8 targetShift = shifts[i] + 1;
+
+        Bitboard blockers = rookBlockerMask[i];
+        u8 numBlockers = 0;
+        for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+            if ((1ULL << blockerIndex) & blockers)
+                numBlockers++;
+        }
+        printf("%d\n", numBlockers);
+
+
+        for (int j = 0; j < 64; j++) {
+            u16 key = magic * rookBlockerMask[j];
+        }
+    }
+
+}
+
+u64 generateRandomU64() {
+    u64 lower = (u64)rand();     // Generate a lower 32 bits
+    u64 upper = (u64)rand();     // Generate an upper 32 bits
+    return (upper << 32) | lower; // Combine both into a 64-bit integer
 }
 
 
