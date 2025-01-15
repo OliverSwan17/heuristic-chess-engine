@@ -13,7 +13,7 @@
 
 //Misc
 #define FILE(i) (((i) % 8) + 1)
-#define RANK(i) (abs(((i) + 1 + 8 - 1) / 8 - 9))
+#define RANK(i) (i / 8 + 1)
 #define WHITE (0)
 #define BLACK (1)
 
@@ -60,7 +60,7 @@ void generateKnightAttackMap();
 void generateKingAttackMap();
 void generatePawnAttackMap();
 void generateRookBlockerMask();
-u8
+
 void knightMoves(Bitboard knights, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
 void kingMoves(Bitboard kings, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
 void pawnMoves(Bitboard pawns, Bitboard colouredPieces, u16 *moves, u8 *moveNumber, u8 colour);

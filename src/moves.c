@@ -3,7 +3,7 @@
 Bitboard knightAttackMap[64];
 Bitboard kingAttackMap[64];
 Bitboard pawnAttackMap[2][64];
-Bitboard rookBlockerMask[64];
+Bitboard rookBlockerMasks[64];
 
 void generateKnightAttackMap() {
     Bitboard squares = 0;
@@ -15,14 +15,14 @@ void generateKnightAttackMap() {
         rank = RANK(i);
         file = FILE(i);
         
-        if (rank <= 6) {
+        if (rank >= 6) {
             if (file != 1)
                 squares |= (1ULL << (i - 17));
             if (file != 8)
                 squares |= (1ULL << (i - 15));
         }
 
-        if (rank >= 3) {
+        if (rank <= 3) {
             if (file != 1)
                 squares |= (1ULL << (i + 15));
             if (file != 8)
@@ -30,18 +30,18 @@ void generateKnightAttackMap() {
         }
 
         if (file <= 6) {
-            if (rank <= 7)
+            if (rank >= 7)
                 squares |= (1ULL << (i - 6));
 
-            if (rank >= 2)
+            if (rank <= 2)
                 squares |= (1ULL << (i + 10));
         }
 
         if (file >= 3) {
-            if (rank <= 7)
+            if (rank >= 7)
                 squares |= (1ULL << (i - 10));
 
-            if (rank >= 2)
+            if (rank <= 2)
                 squares |= (1ULL << (i + 6));
         }
 
@@ -100,7 +100,9 @@ void generatePawnAttackMap() {
 }
 
 void generateRookBlockerMask() {
-
+    for (int i = 0; i < 64; i++) {
+        
+    }
 }
 
 void knightMoves(Bitboard knights, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber) {
