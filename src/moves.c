@@ -149,25 +149,51 @@ void generateRookBlockerMask() {
 
     u64 magics[64];
     u8 shifts[64];
+    u8 dummyLookup[1 << 18];
     for (int i = 0; i < 64; i++) {
-        shifts[i] = 48;
+        shifts[i] = 46;
     }
 
-    for (int i = 0; i < 64; i++) {
-        u64 magic = generateRandomU64();
-        u8 targetShift = shifts[i] + 1;
+    while (1) {
+        for (int i = 0; i < 64; i++) {
+            for (int k = 0; k < 10000; k++) {
+                u64 magic = generateRandomU64();
+                u8 targetShift = shifts[i] + 1;
 
-        Bitboard blockers = rookBlockerMask[i];
-        u8 numBlockers = 0;
-        for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-            if ((1ULL << blockerIndex) & blockers)
-                numBlockers++;
-        }
-        printf("%d\n", numBlockers);
+                Bitboard blockers = rookBlockerMask[i];
+                u8 numBlockers = 0;
+                for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                    if ((1ULL << blockerIndex) & blockers)
+                        numBlockers++;
+                }
 
+                for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
+                    u32 tempBlockerComboNumber = blockerComboNumber;
+                    Bitboard blockerCombo = 0;
 
-        for (int j = 0; j < 64; j++) {
-            u16 key = magic * rookBlockerMask[j];
+                    for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                        if ((1ULL << blockerIndex) & blockers) {
+                            if (tempBlockerComboNumber & 1) {
+                                blockerCombo |= (1ULL << blockerIndex);
+                            }
+                            tempBlockerComboNumber >>= 1;
+                        }
+                    }
+
+                    u32 key = (magic * blockerCombo) >> targetShift;
+                    if (dummyLookup[key])
+                        goto tryNext;
+                    else
+                        dummyLookup[key] = 1;
+                }
+
+                magics[i] = magic;
+                shifts[i] = targetShift;
+                printf("%d %llu %d\n", i, magics[i], shifts[i]);
+
+                tryNext:
+                memset(&dummyLookup, 0, sizeof(dummyLookup));
+            }
         }
     }
 
