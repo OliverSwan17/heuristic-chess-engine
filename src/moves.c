@@ -3,7 +3,7 @@
 Bitboard knightAttackMap[64];
 Bitboard kingAttackMap[64];
 Bitboard pawnAttackMap[2][64];
-Bitboard rookBlockerMasks[64];
+Bitboard rookBlockerMask[64];
 
 void generateKnightAttackMap() {
     Bitboard squares = 0;
@@ -102,8 +102,50 @@ void generatePawnAttackMap() {
 void generateRookBlockerMask() {
     for (int i = 0; i < 64; i++) {
         
+        int j = i;
+        int file = FILE(j);
+        if (!(file == 1 || file == 2)) {
+            while (FILE(j) != 2) {
+                j--;
+                rookBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+        j = i;
+        file = FILE(j);
+        if (!(file == 7 || file == 8)) {
+            while (FILE(j) != 7) {
+                j++;
+                rookBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+        j = i;
+        int rank = RANK(j);
+        if (!(rank == 7 || rank == 8)) {
+            while (RANK(j) != 7) {
+                j += 8;
+                rookBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+        j = i;
+        rank = RANK(j);
+        if (!(rank == 1 || rank == 2)) {
+            while (RANK(j) != 2) {
+                j -= 8;
+                rookBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+    }
+
+
+    for (int i = 0; i < 64; i++) {
+        printf("%llu\n", rookBlockerMask[i]);
     }
 }
+
 
 void knightMoves(Bitboard knights, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber) {
     u8 i = 0;

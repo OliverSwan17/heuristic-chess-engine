@@ -9,6 +9,8 @@ int main(int argc, char* argv[]) {
     generateKingAttackMap();
     generatePawnAttackMap();
 
+    generateRookBlockerMask();
+
     u8 moveNumber = 0;
     u16 *moves = malloc(256 * sizeof(u16));
     memset(moves, 0, 256 * sizeof(u16));
