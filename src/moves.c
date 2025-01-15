@@ -145,17 +145,18 @@ void generateRookBlockerMask() {
         printf("%llu\n", rookBlockerMask[i]);
     }
 
-    srand((unsigned int)time(NULL));
-
     u64 magics[64];
     u8 shifts[64];
     u8 dummyLookup[1 << 18];
+    u8 done[64];
     for (int i = 0; i < 64; i++) {
         shifts[i] = 50;
     }
 
     while (1) {
         for (int i = 0; i < 64; i++) {
+            if (done[i])
+                continue;
             for (int k = 0; k < 10000; k++) {
                 u64 magic = generateRandomU64();
                 u8 targetShift = shifts[i] + 1;
@@ -168,7 +169,8 @@ void generateRookBlockerMask() {
                 }
 
                 if (shifts[i] == (64 - numBlockers)){
-                    printf("%d DONE!\n", i);
+                    done[i] = 1;
+                    printf("%d Good magic!\n", i);
                     break;
                 }
 
@@ -194,7 +196,7 @@ void generateRookBlockerMask() {
 
                 magics[i] = magic;
                 shifts[i] = targetShift;
-                printf("%d %llu %d\n", i, magics[i], shifts[i]);
+                printf("Index: %d Magic: %llu Shifts: %d\n", i, magics[i], shifts[i]);
 
                 tryNext:
                 memset(&dummyLookup, 0, sizeof(dummyLookup));
@@ -205,7 +207,13 @@ void generateRookBlockerMask() {
 }
 
 u64 generateRandomU64() {
-    static u64 seed = 0x123456789ABCDEFULL;
+    static u64 seed = 0;
+    if (seed == 0) {
+        // Initialize seed with the current time, only once
+        seed = (u64)time(NULL); 
+    }
+
+    // Your existing random number generation algorithm
     seed ^= seed >> 12;
     seed ^= seed << 25;
     seed ^= seed >> 27;
