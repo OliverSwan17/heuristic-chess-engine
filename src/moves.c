@@ -151,7 +151,7 @@ void generateRookBlockerMask() {
     u8 shifts[64];
     u8 dummyLookup[1 << 18];
     for (int i = 0; i < 64; i++) {
-        shifts[i] = 46;
+        shifts[i] = 50;
     }
 
     while (1) {
@@ -165,6 +165,11 @@ void generateRookBlockerMask() {
                 for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
                     if ((1ULL << blockerIndex) & blockers)
                         numBlockers++;
+                }
+
+                if (shifts[i] == (64 - numBlockers)){
+                    printf("%d DONE!\n", i);
+                    break;
                 }
 
                 for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
