@@ -200,10 +200,13 @@ void generateRookBlockerMask() {
 }
 
 u64 generateRandomU64() {
-    u64 lower = (u64)rand();     // Generate a lower 32 bits
-    u64 upper = (u64)rand();     // Generate an upper 32 bits
-    return (upper << 32) | lower; // Combine both into a 64-bit integer
+    static u64 seed = 0x123456789ABCDEFULL;
+    seed ^= seed >> 12;
+    seed ^= seed << 25;
+    seed ^= seed >> 27;
+    return seed * 0x2545F4914F6CDD1DULL;
 }
+
 
 
 void knightMoves(Bitboard knights, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber) {
