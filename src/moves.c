@@ -4,6 +4,7 @@ Bitboard knightAttackMap[64];
 Bitboard kingAttackMap[64];
 Bitboard pawnAttackMap[2][64];
 Bitboard rookBlockerMask[64];
+Bitboard **rookAttackMap;
 
 void generateKnightAttackMap() {
     Bitboard squares = 0;
@@ -158,8 +159,7 @@ void generateRookBlockerMask() {
             if (done[i])
                 continue;
             for (int k = 0; k < 10000; k++) {
-                u64 magic = generateRandomU64();
-                u8 targetShift = shifts[i] + 1;
+                u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
 
                 Bitboard blockers = rookBlockerMask[i];
                 u8 numBlockers = 0;
@@ -168,9 +168,11 @@ void generateRookBlockerMask() {
                         numBlockers++;
                 }
 
+                u8 targetShift = 64 - numBlockers;
+
+
                 if (shifts[i] == (64 - numBlockers)){
                     done[i] = 1;
-                    printf("%d Good magic!\n", i);
                     break;
                 }
 
@@ -196,7 +198,7 @@ void generateRookBlockerMask() {
 
                 magics[i] = magic;
                 shifts[i] = targetShift;
-                printf("Index: %d Magic: %llu Shifts: %d\n", i, magics[i], shifts[i]);
+                printf("Index: %d Magic: %llu Bits: %d\n", i, magics[i], 64 - shifts[i]);
 
                 tryNext:
                 memset(&dummyLookup, 0, sizeof(dummyLookup));
@@ -204,6 +206,10 @@ void generateRookBlockerMask() {
         }
     }
 
+}
+
+void generateRookAttackMap() {
+    
 }
 
 u64 generateRandomU64() {
