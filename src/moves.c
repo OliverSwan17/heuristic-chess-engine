@@ -4,7 +4,7 @@ Bitboard knightAttackMap[64];
 Bitboard kingAttackMap[64];
 Bitboard pawnAttackMap[2][64];
 Bitboard rookBlockerMask[64];
-Bitboard **rookAttackMap;
+Bitboard rookAttackMap[64][4096];
 
 void generateKnightAttackMap() {
     Bitboard squares = 0;
@@ -154,56 +154,124 @@ void generateRookBlockerMask() {
         shifts[i] = 50;
     }
 
-    while (1) {
-        for (int i = 0; i < 64; i++) {
-            if (done[i])
-                continue;
-            for (int k = 0; k < 10000; k++) {
-                u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
+    
+    for (int i = 0; i < 64; i++) {
+        while (1) {
+            if (done[i]){
+                break;
+            }
 
-                Bitboard blockers = rookBlockerMask[i];
-                u8 numBlockers = 0;
+            u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
+
+            Bitboard blockers = rookBlockerMask[i];
+            u8 numBlockers = 0;
+            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                if ((1ULL << blockerIndex) & blockers)
+                    numBlockers++;
+            }
+
+            u8 targetShift = 64 - numBlockers;
+
+
+
+
+            for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
+                u32 tempBlockerComboNumber = blockerComboNumber;
+                Bitboard blockerCombo = 0;
+
                 for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                    if ((1ULL << blockerIndex) & blockers)
-                        numBlockers++;
-                }
-
-                u8 targetShift = 64 - numBlockers;
-
-
-                if (shifts[i] == (64 - numBlockers)){
-                    done[i] = 1;
-                    break;
-                }
-
-                for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
-                    u32 tempBlockerComboNumber = blockerComboNumber;
-                    Bitboard blockerCombo = 0;
-
-                    for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                        if ((1ULL << blockerIndex) & blockers) {
-                            if (tempBlockerComboNumber & 1) {
-                                blockerCombo |= (1ULL << blockerIndex);
-                            }
-                            tempBlockerComboNumber >>= 1;
+                    if ((1ULL << blockerIndex) & blockers) {
+                        if (tempBlockerComboNumber & 1) {
+                            blockerCombo |= (1ULL << blockerIndex);
                         }
+                        tempBlockerComboNumber >>= 1;
                     }
-
-                    u32 key = (magic * blockerCombo) >> targetShift;
-                    if (dummyLookup[key])
-                        goto tryNext;
-                    else
-                        dummyLookup[key] = 1;
                 }
 
-                magics[i] = magic;
-                shifts[i] = targetShift;
-                printf("Index: %d Magic: %llu Bits: %d\n", i, magics[i], 64 - shifts[i]);
+                u32 key = (magic * blockerCombo) >> targetShift;
+                if (dummyLookup[key])
+                    goto tryNext;
+                else
+                    dummyLookup[key] = 1;
+            }
 
-                tryNext:
-                memset(&dummyLookup, 0, sizeof(dummyLookup));
+            magics[i] = magic;
+            shifts[i] = targetShift;
+            printf("Index: %d Magic: %llu Bits: %d\n", i, magics[i], 64 - shifts[i]);
+            done[i] = 1;
+
+            tryNext:
+            memset(&dummyLookup, 0, sizeof(dummyLookup));
+        }
+    }
+
+    printf("Found all the magics!\n");
+       
+    
+
+    for (int i = 0; i < 64; i++) {
+        Bitboard blockers = rookBlockerMask[i];
+        u8 numBlockers = 0;
+        for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+            if ((1ULL << blockerIndex) & blockers)
+                numBlockers++;
+        }
+
+        
+        for (int j = 0; j < (1 << numBlockers); j++) {
+            printf("%d", j);
+            Bitboard blockerCombo = 0;
+            
+            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                u16 tempBlockerComboNumber = j;
+                if ((1ULL << blockerIndex) & blockers) {
+                    if (tempBlockerComboNumber & 1) {
+                        blockerCombo |= (1ULL << blockerIndex);
+                    }
+                    tempBlockerComboNumber >>= 1;
+                }
+            }
+
+            u16 key = (magics[i] * blockerCombo) >> shifts[i];
+
+            int p = i;
+            int file = FILE(p);
+            if (!(file == 1 || file == 2)) {
+                while (FILE(p) != 2 && !((1ULL << p) & blockerCombo)) {
+                    p--;
+                    rookAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+
+            p = i;
+            file = FILE(p);
+            if (!(file == 7 || file == 8)) {
+                while (FILE(p) != 7 && !((1ULL << p) & blockerCombo)) {
+                    p++;
+                    rookAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+
+            p = i;
+            int rank = RANK(p);
+            if (!(rank == 7 || rank == 8)) {
+                while (RANK(p) != 7 && !((1ULL << p) & blockerCombo)) {
+                    p += 8;
+                    rookAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+
+            p = i;
+            rank = RANK(p);
+            if (!(rank == 1 || rank == 2)) {
+                while (RANK(p) != 2 && !((1ULL << p) & blockerCombo)) {
+                    p -= 8;
+                    rookAttackMap[i][key] |= (1ULL << p);
+                }
             }
         }
+
+        printf("%d\n", i);
     }
 
 }
@@ -215,11 +283,9 @@ void generateRookAttackMap() {
 u64 generateRandomU64() {
     static u64 seed = 0;
     if (seed == 0) {
-        // Initialize seed with the current time, only once
         seed = (u64)time(NULL); 
     }
 
-    // Your existing random number generation algorithm
     seed ^= seed >> 12;
     seed ^= seed << 25;
     seed ^= seed >> 27;
