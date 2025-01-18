@@ -1,14 +1,13 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
-    char *fen = "3nr1Q1/2Prpq2/2B5/2nP4/N7/3P4/2P4p/2K1k3";
+    char *fen = "8/2P2k2/1P3rNb/1rQ4P/2n1K3/p2BP3/6Pp/8";
     Board board;
     fenToBoard(fen, &board);
     
     generateKnightAttackMap();
     generateKingAttackMap();
     generatePawnAttackMap();
-
     generateRookBlockerMask();
 
     u8 moveNumber = 0;
@@ -17,10 +16,8 @@ int main(int argc, char* argv[]) {
 
     getMoves(&board, moves, &moveNumber);
 
-    //printMoves(moves, moveNumber);
-
     Bitboard attackingSquares = 0;
-    u8 pieceType = W_KNIGHT;
+    u8 pieceType = B_ROOK;
     for (int i = 0; i < moveNumber; i++){
         if (board.pieces[pieceType] & (1ULL << (moves[i] & 0b111111))){
             attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
@@ -28,13 +25,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    
-    extern Bitboard rookAttackMap[64][4096];
-    extern Bitboard rookBlockerMask[64];
-    extern u64 magics[64];
-    extern u8 shifts[64];
-    attackingSquares = rookAttackMap[61][(magics[61] * (rookBlockerMask[61] & (board.wPieces | board.bPieces))) >> shifts[61]];
-    
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (window == NULL) { goto error;}
@@ -89,4 +79,6 @@ void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
     kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
     pawnMoves(board->pieces[W_PAWN], board->wPieces, moves, moveNumber, WHITE);
     pawnMoves(board->pieces[B_PAWN], board->bPieces, moves, moveNumber, BLACK);
+    rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+    rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
 }

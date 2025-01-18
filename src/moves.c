@@ -148,13 +148,6 @@ void generateRookBlockerMask() {
         printf("Mask: %llu\n", rookBlockerMask[i]);
     }
 
-
-    for (int i = 0; i < 64; i++) {
-        printf("%llu\n", rookBlockerMask[i]);
-    }
-
-    //goto end;
-
     for (int i = 0; i < 64; i++) {
         done[i] = 0;
     }
@@ -205,10 +198,6 @@ void generateRookBlockerMask() {
             memset(&dummyLookup, 0, sizeof(u8) * 4096);
         }
     }
-
-    printf("Found all the magics!\n");
-       
-    
 
     for (int i = 0; i < 64; i++) {
         Bitboard blockers = rookBlockerMask[i];
@@ -271,8 +260,6 @@ void generateRookBlockerMask() {
         }
 
     }
-
-    end:
 }
 
 u64 generateRandomU64() {
@@ -331,6 +318,21 @@ void pawnMoves(Bitboard pawns, Bitboard friendlyColour, u16 *moves, u8 *moveNumb
             attackingSquares &= attackingSquares - 1;
         }
         pawns &= pawns - 1;
+    }
+}
+
+void rookMoves(Bitboard rooks, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber) {
+    uint8_t i = 0;
+    while (rooks) {
+        i = __builtin_ffsll(rooks) - 1;
+        Bitboard attackingSquares = rookAttackMap[i][(magics[i] * (rookBlockerMask[i] & allPieces)) >> shifts[i]] &~ friendlyColour;
+        while (attackingSquares) {
+            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
+            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
+            (*moveNumber)++;
+            attackingSquares &= attackingSquares - 1;
+        }
+        rooks &= rooks - 1;
     }
 }
 

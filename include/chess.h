@@ -59,7 +59,7 @@ void initPiecesTexture(SDL_Renderer* renderer);
 void drawHighlightedSquares(Bitboard squares, SDL_Renderer* renderer);
 
 
-// Moves
+// Attack Maps
 void generateKnightAttackMap();
 void generateKingAttackMap();
 void generatePawnAttackMap();
@@ -69,6 +69,7 @@ u64 generateRandomU64();
 void knightMoves(Bitboard knights, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
 void kingMoves(Bitboard kings, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
 void pawnMoves(Bitboard pawns, Bitboard colouredPieces, u16 *moves, u8 *moveNumber, u8 colour);
+void rookMoves(Bitboard rooks, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber);
 
 void printMoves(u16 *moves, u8 moveNumber);
 
