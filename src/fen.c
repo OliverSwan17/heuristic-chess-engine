@@ -1,5 +1,5 @@
 #include "chess.h"
-// Refactor this to use ENUMS
+
 const unsigned char pieceLookupTable[256] = {
     ['p'] = B_PAWN,
     ['n'] = B_KNIGHT,
@@ -40,14 +40,12 @@ void fenToBoard(char *fen, Board *board) {
     int targetSquare = 0;
     for (int i = 7; i >= 0; i--) {
         for (int j = 0; j < 8; j++) {
-            //printf("%d\n", targetSquare);
             unsigned char fen = ranks[i][j];
-            printf("%c\n", fen);
-
+        
             if(fen >= '1' && fen <= '8'){
                 targetSquare += fen - 48;
             }
-            else if(fen == NULL){
+            else if(fen == 0){
                 break;
             }else{
                 board->pieces[pieceLookupTable[fen]] |= (1ULL << targetSquare);

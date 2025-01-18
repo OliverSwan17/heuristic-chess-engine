@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdint.h>
 #include <time.h>
+#include <SDL2/SDL_ttf.h>
 
 //Screen Constants
 #define SCREEN_LENGTH 800
@@ -53,11 +54,13 @@ extern const unsigned char pieceLookupTable[256];
 
 //Draw
 void initRectangles();
+void initPiecesTexture(SDL_Renderer* renderer);
+void initNumbersTextures(SDL_Renderer* renderer);
+
 void drawSquares(SDL_Renderer* renderer);
 void drawPieces(SDL_Renderer* renderer, Board *board);
-void initPiecesTexture(SDL_Renderer* renderer);
 void drawHighlightedSquares(Bitboard squares, SDL_Renderer* renderer);
-
+void drawNumbers(SDL_Renderer* renderer);
 
 // Attack Maps
 void generateKnightAttackMap();

@@ -4,12 +4,29 @@ SDL_Rect* squaresRects[64];
 SDL_Rect* piecesRects[12];
 SDL_Texture* piecesTexture;
 
+TTF_Font *numberFont;
+SDL_Texture *numbersTextures[64];
+SDL_Color fontColour = {100, 12, 200};
+
 void initPiecesTexture(SDL_Renderer* renderer) {
     SDL_Surface* surface = IMG_Load("assets/pieces/pieces.png");
     if (surface == NULL) {printf("%s\n", IMG_GetError());}
     piecesTexture = SDL_CreateTextureFromSurface(renderer, surface);
     if (piecesTexture == NULL) {printf("%s\n", SDL_GetError());}
     SDL_FreeSurface(surface);
+}
+
+void initNumbersTextures(SDL_Renderer* renderer) {
+    numberFont = TTF_OpenFont("assets/fonts/numbers.ttf", 32);
+
+    for (int i = 0; i < 64; i++) {
+        char text[2];
+        sprintf(text, "%d", i);
+        SDL_Surface *textSurface = TTF_RenderText_Solid(numberFont, text, fontColour);
+        numbersTextures[i] = SDL_CreateTextureFromSurface(renderer, textSurface);
+        SDL_SetTextureAlphaMod(numbersTextures[i], 16);
+        SDL_FreeSurface(textSurface);
+    }
 }
 
 void initRectangles() {
@@ -41,6 +58,12 @@ void drawPieces(SDL_Renderer* renderer, Board *board) {
                 }
             }
         }
+    }
+}
+
+void drawNumbers(SDL_Renderer* renderer) {
+    for (int i = 0; i < 64; i++) {
+        SDL_RenderCopy(renderer, numbersTextures[i], NULL, squaresRects[i]);
     }
 }
 

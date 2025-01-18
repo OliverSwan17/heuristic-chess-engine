@@ -17,9 +17,9 @@ int main(int argc, char* argv[]) {
     getMoves(&board, moves, &moveNumber);
 
     Bitboard attackingSquares = 0;
-    u8 pieceType = B_ROOK;
-    for (int i = 0; i < moveNumber; i++){
-        if (board.pieces[pieceType] & (1ULL << (moves[i] & 0b111111))){
+    u8 index = 45;
+    for (int i = 0; i < moveNumber; i++) {
+        if ((moves[i] & 0b111111) == index) {
             attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
             printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6);
         }
@@ -31,8 +31,14 @@ int main(int argc, char* argv[]) {
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (renderer == NULL) { goto error;}
 
+    if (TTF_Init() == -1) {
+        printf("TTF_Init Error: %s\n", TTF_GetError());
+        return 1;
+    }
+
     initRectangles();
     initPiecesTexture(renderer);
+    initNumbersTextures(renderer);
 
     SDL_Event e;
     int quit = 0;
@@ -58,6 +64,7 @@ int main(int argc, char* argv[]) {
         drawSquares(renderer);
         drawPieces(renderer, &board);
         drawHighlightedSquares(attackingSquares, renderer);
+        drawNumbers(renderer);
         SDL_RenderPresent(renderer);
     }
 

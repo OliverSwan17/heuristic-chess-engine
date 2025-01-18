@@ -6,11 +6,83 @@ Bitboard pawnAttackMap[2][64];
 Bitboard rookBlockerMask[64];
 Bitboard rookAttackMap[64][4096];
 
-u64 magics[64];
-u8 shifts[64];
+u64 magics[64] = {
+36028936676704400ULL 
+,72095527461716226ULL
+,36056422257070080ULL
+,108103984559949824ULL
+,10520417602942013452ULL
+,10808647910376412176ULL
+,864693332353230852ULL
+,360290169854787840ULL
+,1153062244246880300ULL
+,9223442474320527936ULL
+,9228016717574176896ULL
+,1829656110041088ULL
+,5909004255477432325ULL
+,9296696818110824960ULL
+,281526549878016ULL
+,281477158097152ULL
+,9223522120194473984ULL
+,576531945683423232ULL
+,576743327328637252ULL
+,577164989769451520ULL
+,594616438996599808ULL
+,288512950674138112ULL
+,11333765876945416ULL
+,41678088303842305ULL
+,2308412020280016899ULL
+,117095515531772960ULL
+,45352696425742464ULL
+,2902712846385280ULL
+,1298206577349914880ULL
+,145522575844844544ULL
+,4617333127328039170ULL
+,8111551402175647876ULL
+,36028934462112064ULL
+,81064940399497216ULL
+,92886881934525456ULL
+,18031992851404804ULL
+,19844106125576192ULL
+,90635011253864484ULL
+,17696674545954ULL
+,178740466287649ULL
+,158604571213824ULL
+,5350418208274841632ULL
+,108403063344136256ULL
+,18093701893062672ULL
+,2270491914076164ULL
+,81628361855991828ULL
+,2382406470757777421ULL
+,1147855306756ULL
+,579134834929058048ULL
+,292874850710585472ULL
+,72620820214219264ULL
+,11542778630232899712ULL
+,290273225867648ULL
+,4536560257025ULL
+,14411519943873020928ULL
+,1189514420909507072ULL
+,63966500570013953ULL
+,2305913382397576209ULL
+,576535590497945857ULL
+,9367496158799200513ULL
+,146930092730753058ULL
+,18577627770785794ULL
+,2308095393179631908ULL
+,13855360134852904066ULL
+};
 
-u8 dummyLookup[4096];
-u8 done[64];
+u8 shifts[64] = {
+    52, 53, 53, 53, 53, 53, 53, 52,
+    53, 54, 54, 54, 54, 54, 54, 53,
+    53, 54, 54, 54, 54, 54, 54, 53,
+    53, 54, 54, 54, 54, 54, 54, 53,
+    53, 54, 54, 54, 54, 54, 54, 53,
+    53, 54, 54, 54, 54, 54, 54, 53,
+    53, 54, 54, 54, 54, 54, 54, 53,
+    52, 53, 53, 53, 53, 53, 53, 52,
+};
 
 void generateKnightAttackMap() {
     Bitboard squares = 0;
@@ -145,58 +217,6 @@ void generateRookBlockerMask() {
             }
         }
 
-        printf("Mask: %llu\n", rookBlockerMask[i]);
-    }
-
-    for (int i = 0; i < 64; i++) {
-        done[i] = 0;
-    }
- 
-    for (int i = 0; i < 64; i++) {
-        while (1) {
-            if (done[i]){
-                break;
-            }
-
-            u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
-
-            Bitboard blockers = rookBlockerMask[i];
-            u8 numBlockers = 0;
-            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                if ((1ULL << blockerIndex) & blockers)
-                    numBlockers++;
-            }
-
-            u8 targetShift = 64 - numBlockers;
-
-            for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
-                u32 tempBlockerComboNumber = blockerComboNumber;
-                Bitboard blockerCombo = 0;
-
-                for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                    if ((1ULL << blockerIndex) & blockers) {
-                        if (tempBlockerComboNumber & 1) {
-                            blockerCombo |= (1ULL << blockerIndex);
-                        }
-                        tempBlockerComboNumber >>= 1;
-                    }
-                }
-
-                u32 key = (magic * blockerCombo) >> targetShift;
-                if (dummyLookup[key])
-                    goto tryNext;
-                else
-                    dummyLookup[key] = 1;
-            }
-
-            magics[i] = magic;
-            shifts[i] = targetShift;
-            printf("Index: %d Magic: %llu Bits: %d\n", i, magics[i], 64 - shifts[i]);
-            done[i] = 1;
-
-            tryNext:
-            memset(&dummyLookup, 0, sizeof(u8) * 4096);
-        }
     }
 
     for (int i = 0; i < 64; i++) {
@@ -260,6 +280,65 @@ void generateRookBlockerMask() {
         }
 
     }
+
+    /*
+    u8 dummyLookup[4096];
+    memset(&dummyLookup, 0, 4096);
+    u8 done[64];
+    memset(&done, 0, 64);
+
+
+    for (int i = 0; i < 64; i++) {
+        done[i] = 0;
+    }
+ 
+    for (int i = 0; i < 64; i++) {
+        while (1) {
+            if (done[i]){
+                break;
+            }
+
+            u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
+
+            Bitboard blockers = rookBlockerMask[i];
+            u8 numBlockers = 0;
+            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                if ((1ULL << blockerIndex) & blockers)
+                    numBlockers++;
+            }
+
+            u8 targetShift = 64 - numBlockers;
+
+            for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
+                u32 tempBlockerComboNumber = blockerComboNumber;
+                Bitboard blockerCombo = 0;
+
+                for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                    if ((1ULL << blockerIndex) & blockers) {
+                        if (tempBlockerComboNumber & 1) {
+                            blockerCombo |= (1ULL << blockerIndex);
+                        }
+                        tempBlockerComboNumber >>= 1;
+                    }
+                }
+
+                u32 key = (magic * blockerCombo) >> targetShift;
+                if (dummyLookup[key])
+                    goto tryNext;
+                else
+                    dummyLookup[key] = 1;
+            }
+
+            magics[i] = magic;
+            shifts[i] = targetShift;
+            printf("Index: %d Magic: %llu Bits: %d\n", i, magics[i], 64 - shifts[i]);
+            done[i] = 1;
+
+            tryNext:
+            memset(&dummyLookup, 0, sizeof(u8) * 4096);
+        }
+    }
+    */
 }
 
 u64 generateRandomU64() {
