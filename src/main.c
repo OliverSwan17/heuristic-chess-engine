@@ -1,7 +1,7 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
-    char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    char *fen = "3nr1Q1/2Prpq2/2B5/2nP4/N7/3P4/2P4p/2K1k3";
     Board board;
     fenToBoard(fen, &board);
     
@@ -28,6 +28,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    
+    extern Bitboard rookAttackMap[64][4096];
+    extern Bitboard rookBlockerMask[64];
+    extern u64 magics[64];
+    extern u8 shifts[64];
+    attackingSquares = rookAttackMap[61][(magics[61] * (rookBlockerMask[61] & (board.wPieces | board.bPieces))) >> shifts[61]];
     
     if (SDL_Init(SDL_INIT_VIDEO) != 0) { goto error;}
     SDL_Window *window = SDL_CreateWindow("Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_LENGTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);

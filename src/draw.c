@@ -16,9 +16,7 @@ void initRectangles() {
     for (int y = 0; y < 8; y++){
         for (int x = 0; x < 8; x++){
             squaresRects[y * 8 + x] = (SDL_Rect*)malloc(sizeof(SDL_Rect));
-            if (!squaresRects[y * 8 + x]) {exit(1);}
-
-            squaresRects[y * 8 + x]->x = 700 - SQUARE_SIZE * x;
+            squaresRects[y * 8 + x]->x = SQUARE_SIZE * x;
             squaresRects[y * 8 + x]->y = 700 - SQUARE_SIZE * y;
             squaresRects[y * 8 + x]->w = SQUARE_SIZE;
             squaresRects[y * 8 + x]->h = SQUARE_SIZE;
@@ -36,10 +34,11 @@ void initRectangles() {
 
 void drawPieces(SDL_Renderer* renderer, Board *board) {
     for (int i = 0; i < 12; i++){
-        for (int j = 0; j < 64; j++){
-            if (board->pieces[i] & (1Ull << j)){
-                SDL_Rect destinationRect = {700 - j % 8 * SQUARE_SIZE, 700 - j / 8 * SQUARE_SIZE, 100, 100};
-                SDL_RenderCopy(renderer, piecesTexture, piecesRects[i], &destinationRect);
+        for (int y = 0; y < 8; y++){
+            for (int x = 0; x < 8; x++){
+                if (board->pieces[i] & (1Ull << (y * 8 + x))){
+                    SDL_RenderCopy(renderer, piecesTexture, piecesRects[i], squaresRects[y * 8 + x]);
+                }
             }
         }
     }

@@ -6,6 +6,12 @@ Bitboard pawnAttackMap[2][64];
 Bitboard rookBlockerMask[64];
 Bitboard rookAttackMap[64][4096];
 
+u64 magics[64];
+u8 shifts[64];
+
+u8 dummyLookup[4096];
+u8 done[64];
+
 void generateKnightAttackMap() {
     Bitboard squares = 0;
     u8 rank = 0;
@@ -139,6 +145,7 @@ void generateRookBlockerMask() {
             }
         }
 
+        printf("Mask: %llu\n", rookBlockerMask[i]);
     }
 
 
@@ -146,15 +153,12 @@ void generateRookBlockerMask() {
         printf("%llu\n", rookBlockerMask[i]);
     }
 
-    u64 magics[64];
-    u8 shifts[64];
-    u8 dummyLookup[1 << 18];
-    u8 done[64];
-    for (int i = 0; i < 64; i++) {
-        shifts[i] = 50;
-    }
+    //goto end;
 
-    
+    for (int i = 0; i < 64; i++) {
+        done[i] = 0;
+    }
+ 
     for (int i = 0; i < 64; i++) {
         while (1) {
             if (done[i]){
@@ -171,9 +175,6 @@ void generateRookBlockerMask() {
             }
 
             u8 targetShift = 64 - numBlockers;
-
-
-
 
             for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
                 u32 tempBlockerComboNumber = blockerComboNumber;
@@ -201,7 +202,7 @@ void generateRookBlockerMask() {
             done[i] = 1;
 
             tryNext:
-            memset(&dummyLookup, 0, sizeof(dummyLookup));
+            memset(&dummyLookup, 0, sizeof(u8) * 4096);
         }
     }
 
@@ -217,13 +218,11 @@ void generateRookBlockerMask() {
                 numBlockers++;
         }
 
-        
-        for (int j = 0; j < (1 << numBlockers); j++) {
-            printf("%d", j);
+        for (u16 j = 0; j < (1 << numBlockers); j++) {
             Bitboard blockerCombo = 0;
             
+            u32 tempBlockerComboNumber = j;
             for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                u16 tempBlockerComboNumber = j;
                 if ((1ULL << blockerIndex) & blockers) {
                     if (tempBlockerComboNumber & 1) {
                         blockerCombo |= (1ULL << blockerIndex);
@@ -232,12 +231,12 @@ void generateRookBlockerMask() {
                 }
             }
 
-            u16 key = (magics[i] * blockerCombo) >> shifts[i];
-
+            u32 key = (magics[i] * blockerCombo) >> shifts[i];
+            
             int p = i;
             int file = FILE(p);
-            if (!(file == 1 || file == 2)) {
-                while (FILE(p) != 2 && !((1ULL << p) & blockerCombo)) {
+            if (!(file == 1)) {
+                while (FILE(p) != 1 && !((1ULL << p) & blockerCombo)) {
                     p--;
                     rookAttackMap[i][key] |= (1ULL << p);
                 }
@@ -245,8 +244,8 @@ void generateRookBlockerMask() {
 
             p = i;
             file = FILE(p);
-            if (!(file == 7 || file == 8)) {
-                while (FILE(p) != 7 && !((1ULL << p) & blockerCombo)) {
+            if (!(file == 8)) {
+                while (FILE(p) != 8 && !((1ULL << p) & blockerCombo)) {
                     p++;
                     rookAttackMap[i][key] |= (1ULL << p);
                 }
@@ -254,8 +253,8 @@ void generateRookBlockerMask() {
 
             p = i;
             int rank = RANK(p);
-            if (!(rank == 7 || rank == 8)) {
-                while (RANK(p) != 7 && !((1ULL << p) & blockerCombo)) {
+            if (!(rank == 8)) {
+                while (RANK(p) != 8 && !((1ULL << p) & blockerCombo)) {
                     p += 8;
                     rookAttackMap[i][key] |= (1ULL << p);
                 }
@@ -263,21 +262,17 @@ void generateRookBlockerMask() {
 
             p = i;
             rank = RANK(p);
-            if (!(rank == 1 || rank == 2)) {
-                while (RANK(p) != 2 && !((1ULL << p) & blockerCombo)) {
+            if (!(rank == 1)) {
+                while (RANK(p) != 1 && !((1ULL << p) & blockerCombo)) {
                     p -= 8;
                     rookAttackMap[i][key] |= (1ULL << p);
                 }
             }
         }
 
-        printf("%d\n", i);
     }
 
-}
-
-void generateRookAttackMap() {
-    
+    end:
 }
 
 u64 generateRandomU64() {
