@@ -24,7 +24,7 @@ void initNumbersTextures(SDL_Renderer* renderer) {
         sprintf(text, "%d", i);
         SDL_Surface *textSurface = TTF_RenderText_Solid(numberFont, text, fontColour);
         numbersTextures[i] = SDL_CreateTextureFromSurface(renderer, textSurface);
-        SDL_SetTextureAlphaMod(numbersTextures[i], 16);
+        SDL_SetTextureAlphaMod(numbersTextures[i], 25);
         SDL_FreeSurface(textSurface);
     }
 }

@@ -1,7 +1,7 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
-    char *fen = "8/2P2k2/1P3rNb/1rQ4P/2n1K3/p2BP3/6Pp/8";
+    char *fen = "3b2BK/pRP1pb2/N1kP3p/2p2PPq/4rQ2/Pp3PRp/2pp1PP1/Nn1n2B1";
     Board board;
     fenToBoard(fen, &board);
     
@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     getMoves(&board, moves, &moveNumber);
 
     Bitboard attackingSquares = 0;
-    u8 index = 45;
+    u8 index = 42;
     for (int i = 0; i < moveNumber; i++) {
         if ((moves[i] & 0b111111) == index) {
             attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
