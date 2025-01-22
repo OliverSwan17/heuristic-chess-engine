@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     generateRookBlockerMask();
 
     u8 moveNumber = 0;
-    u16 *moves = malloc(256 * sizeof(u16));
+    u16 moves[256];
     memset(moves, 0, 256 * sizeof(u16));
 
     getMoves(&board, moves, &moveNumber);
