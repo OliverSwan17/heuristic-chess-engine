@@ -1,6 +1,13 @@
+ifeq ($(OS), Windows_NT)
 CC = gcc
 CFLAGS = -Wall -g -Iinclude -I/c/msys64/mingw64/include/SDL2
 LDFLAGS = -L/c/msys64/mingw64/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
+else
+CC = gcc
+CFLAGS = -Wall -std=c99 -I/opt/homebrew/include -I$(HEADERS_DIR)
+LDFLAGS = -L/opt/homebrew/lib -lSDL2 -lSDL2_ttf -lSDL2_image
+endif
+
 SRCS_DIR = src
 OBJS_DIR = obj
 HEADERS_DIR = include

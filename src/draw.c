@@ -16,11 +16,12 @@ void initPiecesTexture(SDL_Renderer* renderer) {
     SDL_FreeSurface(surface);
 }
 
+
 void initNumbersTextures(SDL_Renderer* renderer) {
     numberFont = TTF_OpenFont("assets/fonts/numbers.ttf", 32);
 
     for (int i = 0; i < 64; i++) {
-        char text[2];
+        char text[3];
         sprintf(text, "%d", i);
         SDL_Surface *textSurface = TTF_RenderText_Solid(numberFont, text, fontColour);
         numbersTextures[i] = SDL_CreateTextureFromSurface(renderer, textSurface);
