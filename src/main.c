@@ -13,29 +13,13 @@ int main(int argc, char* argv[]) {
     u8 moveNumber = 0;
     u16 moves[256];
     memset(moves, 0, 256 * sizeof(u16));
-
-    getMoves(&board, moves, &moveNumber);
-
     Bitboard attackingSquares = 0;
-    u8 index = 42;
-    for (int i = 0; i < moveNumber; i++) {
-        if ((moves[i] & 0b111111) == index) {
-            attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
-            printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6);
-        }
-    }
 
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        printf("SDL_Init Error: %s\n", SDL_GetError());
-        return 1;
-    }
 
-    // Initialize variables
+
+    SDL_Init(SDL_INIT_VIDEO);
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-
-    // Create SDL window
     window = SDL_CreateWindow(
         "Chess", 
         SDL_WINDOWPOS_UNDEFINED, 
@@ -44,36 +28,13 @@ int main(int argc, char* argv[]) {
         SCREEN_HEIGHT, 
         SDL_WINDOW_SHOWN
     );
-    if (window == NULL) {
-        printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-    // Create SDL renderer
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL) {
-        printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
 
-    // Initialize SDL_ttf
-    if (TTF_Init() == -1) {
-        printf("TTF_Init Error: %s\n", TTF_GetError());
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    
-    // Initialize game resources
+    TTF_Init();
     initRectangles();
     initPiecesTexture(renderer);
     initNumbersTextures(renderer);
 
-    // Main game loop
     SDL_Event e;
     int quit = 0;
     while (!quit) {
@@ -88,18 +49,15 @@ int main(int argc, char* argv[]) {
         }
 
         SDL_RenderClear(renderer);
-        drawSquares(renderer);
-        drawPieces(renderer, &board);
-        drawHighlightedSquares(attackingSquares, renderer);
-        drawNumbers(renderer);
+            drawSquares(renderer);
+            drawPieces(renderer, &board);
+            drawHighlightedSquares(attackingSquares, renderer);
+            drawNumbers(renderer);
         SDL_RenderPresent(renderer);
+        
+        if (terminalInput(&board, moves, &moveNumber, &attackingSquares))
+            break;
     }
-
-    // Cleanup resources
-    if (renderer != NULL) SDL_DestroyRenderer(renderer);
-    if (window != NULL) SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
 
     return 0;
 }
@@ -109,8 +67,54 @@ void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
     knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
     kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
     kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
-    pawnMoves(board->pieces[W_PAWN], board->wPieces, moves, moveNumber, WHITE);
-    pawnMoves(board->pieces[B_PAWN], board->bPieces, moves, moveNumber, BLACK);
+    pawnMoves(board->pieces[W_PAWN], board->bPieces, moves, moveNumber, WHITE);
+    pawnMoves(board->pieces[B_PAWN], board->wPieces, moves, moveNumber, BLACK);
     rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
     rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+}
+
+int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {
+    char buffer[32];
+    memset(&buffer, 0, 32);
+    fgets(buffer, sizeof(buffer), stdin);
+
+    if (buffer[0] == 'q')
+        return 1;
+
+    if (buffer[0] == 'm'){
+        buffer[3] = '\0';
+        u8 index = atoi(&buffer[1]);
+
+        *attackingSquares = 0;
+        *moveNumber = 0;
+        memset(moves, 0, 256 * sizeof(u16));
+        
+        getMoves(board, moves, moveNumber);
+        for (int i = 0; i < *moveNumber; i++) {
+            if ((moves[i] & 0b111111) == index) {
+                *attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
+                //printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6);
+            }
+        }
+    } else {
+        buffer[2] = '\0';
+        buffer[5] = '\0';
+
+        u8 srcSquare = atoi(&buffer[0]);
+        u8 dstSquare = atoi(&buffer[3]);
+
+        for (int i = 0; i < 12; i++) {
+            if (board->pieces[i] & (1ULL << srcSquare)) {
+                board->pieces[i] &= ~(1ULL << srcSquare);
+                board->pieces[i] |= (1ULL << dstSquare);
+
+                board->wPieces = board->pieces[W_PAWN] | board->pieces[W_KNIGHT] | board->pieces[W_BISHOP] | board->pieces[W_ROOK] | board->pieces[W_QUEEN] | board->pieces[W_KING];
+                board->bPieces = board->pieces[B_PAWN] | board->pieces[B_KNIGHT] | board->pieces[B_BISHOP] | board->pieces[B_ROOK] | board->pieces[B_QUEEN] | board->pieces[B_KING];
+                break;
+            }
+        }
+    }
+    
+
+    return 0;
 }

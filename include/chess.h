@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <SDL2/SDL_ttf.h>
+#include <pthread.h>
 
 //Screen Constants
 #define SCREEN_LENGTH 800
@@ -78,4 +79,5 @@ void printMoves(u16 *moves, u8 moveNumber);
 
 // Main
 void getMoves(Board *board, u16 *moves, u8 *moveNumber);
+int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares);
 
