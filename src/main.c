@@ -1,7 +1,7 @@
 #include "chess.h"
 
 int main(int argc, char* argv[]) {
-    char *fen = "3b2BK/pRP1pb2/N1kP3p/2p2PPq/4rQ2/Pp3PRp/2pp1PP1/Nn1n2B1";
+    char *fen = "8/1rp1P1N1/pPK1B3/1PQ1pP1R/n1pPR1P1/p1B1P3/kBP1p2b/Br6";
     Board board;
     fenToBoard(fen, &board);
     
@@ -72,6 +72,8 @@ void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
     pawnMoves(board->pieces[B_PAWN], board->wPieces, moves, moveNumber, BLACK);
     rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
     rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+    bishopMoves(board->pieces[W_BISHOP], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+    bishopMoves(board->pieces[B_BISHOP], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
 }
 
 int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {

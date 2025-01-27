@@ -30,6 +30,9 @@ u8 rookShifts[64] = {
     52, 53, 53, 53, 53, 53, 53, 52,
 };
 
+u64 bishopMagics[64];
+u8 bishopShifts[64];
+
 void generateKnightAttackMap() {
     Bitboard squares = 0;
     u8 rank = 0;
@@ -330,6 +333,129 @@ void generateBishopBlockerMask() {
             }
         }
     }
+
+    u8 dummyLookup[4096];
+    memset(&dummyLookup, 0, 4096);
+    u8 done[64];
+    memset(&done, 0, 64);
+
+    for (int i = 0; i < 64; i++) {
+        done[i] = 0;
+    }
+ 
+    for (int i = 0; i < 64; i++) {
+        while (1) {
+            if (done[i]){
+                break;
+            }
+
+            u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
+
+            Bitboard blockers = bishopBlockerMask[i];
+            u8 numBlockers = 0;
+            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                if ((1ULL << blockerIndex) & blockers)
+                    numBlockers++;
+            }
+
+            u8 targetShift = 64 - numBlockers;
+
+            for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
+                u32 tempBlockerComboNumber = blockerComboNumber;
+                Bitboard blockerCombo = 0;
+
+                for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                    if ((1ULL << blockerIndex) & blockers) {
+                        if (tempBlockerComboNumber & 1) {
+                            blockerCombo |= (1ULL << blockerIndex);
+                        }
+                        tempBlockerComboNumber >>= 1;
+                    }
+                }
+
+                u32 key = (magic * blockerCombo) >> targetShift;
+                if (dummyLookup[key])
+                    goto tryNext;
+                else
+                    dummyLookup[key] = 1;
+            }
+
+            bishopMagics[i] = magic;
+            bishopShifts[i] = targetShift;
+            printf("Index: %d Magic: %llu Bits: %d\n", i, bishopMagics[i], 64 - bishopShifts[i]);
+            done[i] = 1;
+
+            tryNext:
+            memset(&dummyLookup, 0, sizeof(u8) * 4096);
+        }
+    }
+
+    for (int i = 0; i < 64; i++) {
+        Bitboard blockers = bishopBlockerMask[i];
+        u8 numBlockers = 0;
+        for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+            if ((1ULL << blockerIndex) & blockers)
+                numBlockers++;
+        }
+
+        for (u16 j = 0; j < (1 << numBlockers); j++) {
+            Bitboard blockerCombo = 0;
+            
+            u32 tempBlockerComboNumber = j;
+            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
+                if ((1ULL << blockerIndex) & blockers) {
+                    if (tempBlockerComboNumber & 1) {
+                        blockerCombo |= (1ULL << blockerIndex);
+                    }
+                    tempBlockerComboNumber >>= 1;
+                }
+            }
+
+            u32 key = (bishopMagics[i] * blockerCombo) >> bishopShifts[i];
+
+            int p = i;
+            int file = FILE(p);
+            int rank = RANK(p);
+
+            if (!(file == 1) && !(rank == 1)) {
+                while (FILE(p) != 1 && RANK(p) != 1 && !((1ULL << p) & blockerCombo)) {
+                    p -= 9;
+                    bishopAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+
+            p = i;
+            file = FILE(p);
+            rank = RANK(p);
+            if (!(file == 8) && !(rank == 8)) {
+                while (FILE(p) != 8 && RANK(p) != 8 && !((1ULL << p) & blockerCombo)) {
+                    p += 9;
+                    bishopAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+
+            p = i;
+            file = FILE(p);
+            rank = RANK(p);
+            if (!(rank == 8) && !(file == 1)) {
+                while (RANK(p) != 8 && FILE(p) != 1 && !((1ULL << p) & blockerCombo)) {
+                    p += 7;
+                    bishopAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+
+            p = i;
+            file = FILE(p);
+            rank = RANK(p);
+            if (!(rank == 1) && !(file == 8)) {
+                while (RANK(p) != 1 && FILE(p) != 8 && !((1ULL << p) & blockerCombo)) {
+                    p -= 7;
+                    bishopAttackMap[i][key] |= (1ULL << p);
+                }
+            }
+            
+        }
+    }
 }
 
 u64 generateRandomU64() {
@@ -401,6 +527,21 @@ void rookMoves(Bitboard rooks, Bitboard allPieces, Bitboard friendlyColour, u16 
             attackingSquares &= attackingSquares - 1;
         }
         rooks &= rooks - 1;
+    }
+}
+
+void bishopMoves(Bitboard bishops, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber) {
+    uint8_t i = 0;
+    while (bishops) {
+        i = __builtin_ffsll(bishops) - 1;
+        Bitboard attackingSquares = bishopAttackMap[i][(bishopMagics[i] * (bishopBlockerMask[i] & allPieces)) >> bishopShifts[i]] &~ friendlyColour;
+        while (attackingSquares) {
+            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
+            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
+            (*moveNumber)++;
+            attackingSquares &= attackingSquares - 1;
+        }
+        bishops &= bishops - 1;
     }
 }
 
