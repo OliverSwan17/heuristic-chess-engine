@@ -30,8 +30,8 @@ u8 rookShifts[64] = {
     52, 53, 53, 53, 53, 53, 53, 52,
 };
 
-u64 bishopMagics[64];
-u8 bishopShifts[64];
+u64 bishopMagics[64] = {9372002953948594208ULL,567365246959627ULL,5088557129531920ULL,4613948891222507776ULL,2320484243488145408ULL,1171375727633777158ULL,282093655441520ULL,141046860481024ULL,72070925924565504ULL,4706017275316480ULL,1175738793249490944ULL,1153040269923385992ULL,144186726126977028ULL,329353227759786008ULL,1172136587564290312ULL,1155877559133602816ULL,5053038799156938820ULL,5066687087059456ULL,40542382483079424ULL,1195705718292875298ULL,292875142791463168ULL,2307109693862232064ULL,73482569715288576ULL,581668589741019264ULL,4692768542554063110ULL,181274283149894673ULL,54976386957376ULL,2892437960460863616ULL,2310353755733787648ULL,37298732982616576ULL,9259563638912717856ULL,576298716043264ULL,52389598862574092ULL,3567704263341113600ULL,7211393374389142016ULL,4611756421665554944ULL,1731654036912881920ULL,4792049924105699584ULL,6541549381567643968ULL,9150144381485184ULL,577624045273485828ULL,19181053629564928ULL,18051784857616896ULL,2499679361026ULL,4531500020142592ULL,5765171091513311616ULL,27235478579319360ULL,578998427296211456ULL,2522582108673966145ULL,845054411800899ULL,2547585638465860ULL,160538907119872ULL,4629721582672151616ULL,72062009399185920ULL,583236097712193538ULL,585648288657588232ULL,5188166596635657224ULL,72348157232744516ULL,11531466881521946624ULL,4971980587926817792ULL,1158623022439596552ULL,306262402851668481ULL,144185574453149960ULL,6935547858699486384ULL};
+u8 bishopShifts[64] = {58,59,59,59,59,59,59,58,59,59,59,59,59,59,59,59,59,59,57,57,57,57,59,59,59,59,57,55,55,57,59,59,59,59,57,55,55,57,59,59,59,59,57,57,57,57,59,59,59,59,59,59,59,59,59,59,58,59,59,59,59,59,59,58};
 
 void generateKnightAttackMap() {
     Bitboard squares = 0;
@@ -227,67 +227,7 @@ void generateRookBlockerMask() {
                 }
             }
         }
-
     }
-
-    /*
-    u8 dummyLookup[4096];
-    memset(&dummyLookup, 0, 4096);
-    u8 done[64];
-    memset(&done, 0, 64);
-
-
-    for (int i = 0; i < 64; i++) {
-        done[i] = 0;
-    }
- 
-    for (int i = 0; i < 64; i++) {
-        while (1) {
-            if (done[i]){
-                break;
-            }
-
-            u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
-
-            Bitboard blockers = rookBlockerMask[i];
-            u8 numBlockers = 0;
-            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                if ((1ULL << blockerIndex) & blockers)
-                    numBlockers++;
-            }
-
-            u8 targetShift = 64 - numBlockers;
-
-            for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
-                u32 tempBlockerComboNumber = blockerComboNumber;
-                Bitboard blockerCombo = 0;
-
-                for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                    if ((1ULL << blockerIndex) & blockers) {
-                        if (tempBlockerComboNumber & 1) {
-                            blockerCombo |= (1ULL << blockerIndex);
-                        }
-                        tempBlockerComboNumber >>= 1;
-                    }
-                }
-
-                u32 key = (magic * blockerCombo) >> targetShift;
-                if (dummyLookup[key])
-                    goto tryNext;
-                else
-                    dummyLookup[key] = 1;
-            }
-
-            rookMagics[i] = magic;
-            rookShifts[i] = targetShift;
-            printf("Index: %d Magic: %llu Bits: %d\n", i, rookMagics[i], 64 - rookShifts[i]);
-            done[i] = 1;
-
-            tryNext:
-            memset(&dummyLookup, 0, sizeof(u8) * 4096);
-        }
-    }
-    */
 }
 
 void generateBishopBlockerMask() {
@@ -331,62 +271,6 @@ void generateBishopBlockerMask() {
                 j -= 7;
                 bishopBlockerMask[i] |= (1ULL << j);
             }
-        }
-    }
-
-    u8 dummyLookup[4096];
-    memset(&dummyLookup, 0, 4096);
-    u8 done[64];
-    memset(&done, 0, 64);
-
-    for (int i = 0; i < 64; i++) {
-        done[i] = 0;
-    }
- 
-    for (int i = 0; i < 64; i++) {
-        while (1) {
-            if (done[i]){
-                break;
-            }
-
-            u64 magic = generateRandomU64() & generateRandomU64() & generateRandomU64();
-
-            Bitboard blockers = bishopBlockerMask[i];
-            u8 numBlockers = 0;
-            for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                if ((1ULL << blockerIndex) & blockers)
-                    numBlockers++;
-            }
-
-            u8 targetShift = 64 - numBlockers;
-
-            for (u32 blockerComboNumber = 0; blockerComboNumber < (1 << numBlockers); blockerComboNumber++) {
-                u32 tempBlockerComboNumber = blockerComboNumber;
-                Bitboard blockerCombo = 0;
-
-                for (int blockerIndex = 0; blockerIndex < 64; blockerIndex++) {
-                    if ((1ULL << blockerIndex) & blockers) {
-                        if (tempBlockerComboNumber & 1) {
-                            blockerCombo |= (1ULL << blockerIndex);
-                        }
-                        tempBlockerComboNumber >>= 1;
-                    }
-                }
-
-                u32 key = (magic * blockerCombo) >> targetShift;
-                if (dummyLookup[key])
-                    goto tryNext;
-                else
-                    dummyLookup[key] = 1;
-            }
-
-            bishopMagics[i] = magic;
-            bishopShifts[i] = targetShift;
-            printf("Index: %d Magic: %llu Bits: %d\n", i, bishopMagics[i], 64 - bishopShifts[i]);
-            done[i] = 1;
-
-            tryNext:
-            memset(&dummyLookup, 0, sizeof(u8) * 4096);
         }
     }
 
@@ -453,7 +337,6 @@ void generateBishopBlockerMask() {
                     bishopAttackMap[i][key] |= (1ULL << p);
                 }
             }
-            
         }
     }
 }

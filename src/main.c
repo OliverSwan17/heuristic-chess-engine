@@ -16,8 +16,6 @@ int main(int argc, char* argv[]) {
     memset(moves, 0, 256 * sizeof(u16));
     Bitboard attackingSquares = 0;
 
-
-
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
