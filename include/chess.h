@@ -69,6 +69,7 @@ void generateKingAttackMap();
 void generatePawnAttackMap();
 void generateRookBlockerMask();
 u64 generateRandomU64();
+void generateBishopBlockerMask();
 
 void knightMoves(Bitboard knights, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
 void kingMoves(Bitboard kings, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);

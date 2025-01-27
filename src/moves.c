@@ -5,6 +5,9 @@ Bitboard kingAttackMap[64];
 Bitboard pawnAttackMap[2][64];
 Bitboard rookBlockerMask[64];
 Bitboard rookAttackMap[64][4096];
+Bitboard bishopBlockerMask[64];
+Bitboard bishopAttackMap[64][512];
+
 
 u64 rookMagics[64] = {36028936676704400ULL, 72095527461716226ULL, 36056422257070080ULL, 108103984559949824ULL, 10520417602942013452ULL, 10808647910376412176ULL, 
     864693332353230852ULL, 360290169854787840ULL, 1153062244246880300ULL, 9223442474320527936ULL, 9228016717574176896ULL, 1829656110041088ULL, 5909004255477432325ULL, 
@@ -282,6 +285,51 @@ void generateRookBlockerMask() {
         }
     }
     */
+}
+
+void generateBishopBlockerMask() {
+    for (int i = 0; i < 64; i++) {
+        
+        int j = i;
+        int file = FILE(j);
+        int rank = RANK(j);
+        if (!(file == 1 || file == 2) && !(rank == 1 || rank == 2)) {
+            while (FILE(j) != 2 && RANK(j) != 2) {
+                j -= 9;
+                bishopBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+        j = i;
+        file = FILE(j);
+        rank = RANK(j);
+        if (!(file == 7 || file == 8) && !(rank == 7 || rank == 8)) {
+            while (FILE(j) != 7 && RANK(j) != 7) {
+                j += 9;
+                bishopBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+        j = i;
+        file = FILE(j);
+        rank = RANK(j);
+        if (!(rank == 7 || rank == 8) && !(file == 1 || file == 2)) {
+            while (RANK(j) != 7 && FILE(j) != 2) {
+                j += 7;
+                bishopBlockerMask[i] |= (1ULL << j);
+            }
+        }
+
+        j = i;
+        file = FILE(j);
+        rank = RANK(j);
+        if (!(rank == 1 || rank == 2) && !(file == 7 || file == 8)) {
+            while (RANK(j) != 2 && FILE(j) != 7) {
+                j -= 7;
+                bishopBlockerMask[i] |= (1ULL << j);
+            }
+        }
+    }
 }
 
 u64 generateRandomU64() {

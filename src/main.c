@@ -9,6 +9,7 @@ int main(int argc, char* argv[]) {
     generateKingAttackMap();
     generatePawnAttackMap();
     generateRookBlockerMask();
+    generateBishopBlockerMask();
 
     u8 moveNumber = 0;
     u16 moves[256];
@@ -80,6 +81,13 @@ int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingS
 
     if (buffer[0] == 'q')
         return 1;
+
+    // Bishop Blocker Mask Test
+    /* 
+    extern Bitboard bishopBlockerMask[64];
+    *attackingSquares = bishopBlockerMask[atoi(&buffer[0])];
+    return 0;
+    */
 
     if (buffer[0] == 'm'){
         buffer[3] = '\0';
