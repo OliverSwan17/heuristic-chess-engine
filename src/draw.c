@@ -6,7 +6,6 @@
 static SDL_Rect* squaresRects[64];
 static SDL_Rect* piecesRects[12];
 static SDL_Texture* piecesTexture;
-static 
 static TTF_Font *numberFont;
 static SDL_Texture *numbersTextures[64];
 static SDL_Color fontColour = {100, 12, 200};
@@ -94,4 +93,21 @@ void drawHighlightedSquares(Bitboard squares, SDL_Renderer* renderer) {
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
         }
     }
+}
+
+void initSDL(SDL_Window** window, SDL_Renderer** renderer) {
+    *window = SDL_CreateWindow(
+        "Chess", 
+        SDL_WINDOWPOS_UNDEFINED, 
+        SDL_WINDOWPOS_UNDEFINED, 
+        SCREEN_LENGTH, 
+        SCREEN_HEIGHT, 
+        SDL_WINDOW_SHOWN
+    );
+    *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
+
+    TTF_Init();
+    initRectangles();
+    initPiecesTexture(*renderer);
+    initNumbersTextures(*renderer);
 }

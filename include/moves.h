@@ -1,8 +1,10 @@
 #pragma once
 
 #include "types.h"
+#include "board.h"
 
 void initMoveTables();
+void genPseudoLegalMoves(Board *board, u16 *moves, u8 *moveNumber);
 
 void bishopMoves(Bitboard bishops, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber);
 void knightMoves(Bitboard knights, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);

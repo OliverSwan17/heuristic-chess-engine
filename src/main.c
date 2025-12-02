@@ -2,16 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL_ttf.h>
+#include <unistd.h>
 #include "types.h"
 #include "fen.h"
 #include "draw.h"
 #include "moves.h"
 
 static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares);
-static void getMoves(Board *board, u16 *moves, u8 *moveNumber);
+
+
+static SDL_Window* window = NULL;
+static SDL_Renderer* renderer = NULL;
 
 int main(int argc, char* argv[]) {
-    char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    //char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    char *fen = "rnbqkbnr/p2p3p/6p1/1p5P/4p3/P1pP1p2/1PP1PPP1/RNBQKBNR";
     Board board;
     fenToBoard(fen, &board);
     printf("Board size: %llu\n", sizeof(board));
@@ -24,24 +29,9 @@ int main(int argc, char* argv[]) {
     Bitboard attackingSquares = 0;
 
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
-    window = SDL_CreateWindow(
-        "Chess", 
-        SDL_WINDOWPOS_UNDEFINED, 
-        SDL_WINDOWPOS_UNDEFINED, 
-        SCREEN_LENGTH, 
-        SCREEN_HEIGHT, 
-        SDL_WINDOW_SHOWN
-    );
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
-    TTF_Init();
-    initRectangles();
-    initPiecesTexture(renderer);
-    initNumbersTextures(renderer);
-
     SDL_Event e;
+    initSDL(&window, &renderer);
+    
     int quit = 0;
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
@@ -68,25 +58,6 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-static void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
-    knightMoves(board->pieces[W_KNIGHT], board->wPieces, moves, moveNumber);
-    knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
-    kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
-    kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
-    pawnMoves(board->pieces[W_PAWN], board->bPieces, moves, moveNumber, WHITE);
-    pawnMoves(board->pieces[B_PAWN], board->wPieces, moves, moveNumber, BLACK);
-    rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-    rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-    bishopMoves(board->pieces[W_BISHOP], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-    bishopMoves(board->pieces[B_BISHOP], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-
-    rookMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-    bishopMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-
-    rookMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-    bishopMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-}
-
 static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {
     char buffer[32];
     memset(&buffer, 0, 32);
@@ -103,7 +74,7 @@ static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *att
         *moveNumber = 0;
         memset(moves, 0, 256 * sizeof(u16));
         
-        getMoves(board, moves, moveNumber);
+        genPseudoLegalMoves(board, moves, moveNumber);
         for (int i = 0; i < *moveNumber; i++) {
             if ((moves[i] & 0b111111) == index) {
                 *attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
@@ -125,6 +96,37 @@ static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *att
                 board->wPieces = board->pieces[W_PAWN] | board->pieces[W_KNIGHT] | board->pieces[W_BISHOP] | board->pieces[W_ROOK] | board->pieces[W_QUEEN] | board->pieces[W_KING];
                 board->bPieces = board->pieces[B_PAWN] | board->pieces[B_KNIGHT] | board->pieces[B_BISHOP] | board->pieces[B_ROOK] | board->pieces[B_QUEEN] | board->pieces[B_KING];
                 break;
+            }
+        }
+    }
+
+    if (buffer[0] == 'l') {
+        *moveNumber = 0;
+        genPseudoLegalMoves(board, moves, moveNumber);
+        
+        for (int i = 0; i < *moveNumber; i++) {
+            u8 from = moves[i] & 0x3F;
+            u8 to = (moves[i] >> 6) & 0x3F;
+            *attackingSquares = (1ULL << from) | (1ULL << to);
+
+            for (int i = 0; i < 100; i++) {
+                SDL_RenderClear(renderer);
+                drawSquares(renderer);
+                drawPieces(renderer, board);
+                drawHighlightedSquares(*attackingSquares, renderer);
+                drawNumbers(renderer);
+                SDL_RenderPresent(renderer);
+            }
+        
+            for (int j = 0; j < 100; j++) {
+                SDL_Event e;
+                while (SDL_PollEvent(&e)) {
+                    if (e.type == SDL_QUIT || 
+                        (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)) {
+                        return 1;
+                    }
+                }
+                usleep(10000);  // 10ms * 100 = 1 second total
             }
         }
     }

@@ -8,9 +8,7 @@
 #define SCREEN_HEIGHT 800
 #define SQUARE_SIZE (int) SCREEN_LENGTH / 8
 
-void initRectangles();
-void initPiecesTexture(SDL_Renderer* renderer);
-void initNumbersTextures(SDL_Renderer* renderer);
+void initSDL(SDL_Window** window, SDL_Renderer** renderer);
 
 void drawSquares(SDL_Renderer* renderer);
 void drawPieces(SDL_Renderer* renderer, Board *board);
