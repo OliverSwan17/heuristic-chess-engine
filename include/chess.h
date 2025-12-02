@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <time.h>
 #include <SDL2/SDL_ttf.h>
-#include <pthread.h>
 
 //Screen Constants
 #define SCREEN_LENGTH 800
@@ -19,6 +18,9 @@
 #define RANK(i) (i / 8 + 1)
 #define WHITE (0)
 #define BLACK (1)
+
+#define WHITE_TURN (0)
+#define BLACK_TURN (1)
 
 // Bitboards
 typedef uint64_t Bitboard;
@@ -32,6 +34,11 @@ typedef struct {
     Bitboard pieces[12];
     Bitboard wPieces;
     Bitboard bPieces;
+    Bitboard wAttacking;
+    Bitboard bAttacking;
+    u8 enPassant;
+    u8 castling;
+    u8 turn;
 } Board;
 
 enum PieceType {

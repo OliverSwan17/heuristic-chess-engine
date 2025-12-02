@@ -4,6 +4,7 @@ int main(int argc, char* argv[]) {
     char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
     Board board;
     fenToBoard(fen, &board);
+    printf("Board size: %llu\n", sizeof(board));
     
     generateKnightAttackMap();
     generateKingAttackMap();
@@ -87,13 +88,6 @@ int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingS
 
     if (buffer[0] == 'q')
         return 1;
-
-    // Bishop Blocker Mask Test
-    /* 
-    extern Bitboard bishopBlockerMask[64];
-    *attackingSquares = bishopBlockerMask[atoi(&buffer[0])];
-    return 0;
-    */
 
     if (buffer[0] == 'm'){
         buffer[3] = '\0';
