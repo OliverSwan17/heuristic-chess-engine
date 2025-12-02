@@ -1,7 +1,7 @@
 #include <string.h>
 #include "fen.h"
 
-const unsigned char pieceLookupTable[256] = {
+static const unsigned char pieceLookupTable[256] = {
     ['p'] = B_PAWN,
     ['n'] = B_KNIGHT,
     ['b'] = B_BISHOP,

@@ -1,14 +1,15 @@
+#include <stdlib.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "draw.h"
 
-SDL_Rect* squaresRects[64];
-SDL_Rect* piecesRects[12];
-SDL_Texture* piecesTexture;
-
-TTF_Font *numberFont;
-SDL_Texture *numbersTextures[64];
-SDL_Color fontColour = {100, 12, 200};
+static SDL_Rect* squaresRects[64];
+static SDL_Rect* piecesRects[12];
+static SDL_Texture* piecesTexture;
+static 
+static TTF_Font *numberFont;
+static SDL_Texture *numbersTextures[64];
+static SDL_Color fontColour = {100, 12, 200};
 
 void initPiecesTexture(SDL_Renderer* renderer) {
     SDL_Surface* surface = IMG_Load("assets/pieces/pieces.png");
