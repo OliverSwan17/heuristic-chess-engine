@@ -1,4 +1,7 @@
-#include "chess.h"
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+#include "draw.h"
 
 SDL_Rect* squaresRects[64];
 SDL_Rect* piecesRects[12];

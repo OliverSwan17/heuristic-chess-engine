@@ -1,4 +1,12 @@
-#include "chess.h"
+#include <SDL2/SDL_ttf.h>
+
+#include "types.h"
+#include "fen.h"
+#include "draw.h"
+#include "moves.h"
+
+static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares);
+static void getMoves(Board *board, u16 *moves, u8 *moveNumber);
 
 int main(int argc, char* argv[]) {
     char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
@@ -62,7 +70,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
+static void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
     knightMoves(board->pieces[W_KNIGHT], board->wPieces, moves, moveNumber);
     knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
     kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
@@ -81,7 +89,7 @@ void getMoves(Board *board, u16 *moves, u8 *moveNumber) {
     bishopMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
 }
 
-int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {
+static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {
     char buffer[32];
     memset(&buffer, 0, 32);
     fgets(buffer, sizeof(buffer), stdin);

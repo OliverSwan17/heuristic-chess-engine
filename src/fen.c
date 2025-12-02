@@ -1,4 +1,6 @@
-#include "chess.h"
+#include <string.h>
+
+#include "fen.h"
 
 const unsigned char pieceLookupTable[256] = {
     ['p'] = B_PAWN,

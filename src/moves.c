@@ -1,4 +1,6 @@
-#include "chess.h"
+#include <time.h>
+
+#include "moves.h"
 
 Bitboard knightAttackMap[64];
 Bitboard kingAttackMap[64];
@@ -427,8 +429,10 @@ void bishopMoves(Bitboard bishops, Bitboard allPieces, Bitboard friendlyColour, 
     }
 }
 
-void printMoves(u16 *moves, u8 moveNumber) {
+/*
+static void printMoves(u16 *moves, u8 moveNumber) {
      for (int i = 0; i < moveNumber; i++) {
         printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6); 
     }
 }
+*/
