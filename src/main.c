@@ -1,5 +1,4 @@
 #include <SDL2/SDL_ttf.h>
-
 #include "types.h"
 #include "fen.h"
 #include "draw.h"
@@ -14,11 +13,7 @@ int main(int argc, char* argv[]) {
     fenToBoard(fen, &board);
     printf("Board size: %llu\n", sizeof(board));
     
-    generateKnightAttackMap();
-    generateKingAttackMap();
-    generatePawnAttackMap();
-    generateRookBlockerMask();
-    generateBishopBlockerMask();
+    initMoveTables();
 
     u8 moveNumber = 0;
     u16 moves[256];

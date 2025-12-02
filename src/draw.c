@@ -1,6 +1,5 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-
 #include "draw.h"
 
 SDL_Rect* squaresRects[64];
@@ -95,4 +94,3 @@ void drawHighlightedSquares(Bitboard squares, SDL_Renderer* renderer) {
         }
     }
 }
-

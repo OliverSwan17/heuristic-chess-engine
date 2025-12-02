@@ -58,4 +58,15 @@ for (int i = 0; i < 64; i++) {
         memset(&dummyLookup, 0, sizeof(u8) * 4096);
     }
 }
-    
+
+static u64 generateRandomU64() {
+    static u64 seed = 0;
+    if (seed == 0) {
+        seed = (u64)time(NULL); 
+    }
+
+    seed ^= seed >> 12;
+    seed ^= seed << 25;
+    seed ^= seed >> 27;
+    return seed * 0x2545F4914F6CDD1DULL;
+}
