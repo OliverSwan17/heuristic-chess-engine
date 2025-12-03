@@ -43,14 +43,14 @@ static void generateKnightAttackMap() {
         rank = RANK(i);
         file = FILE(i);
         
-        if (rank >= 6) {
+        if (rank >= 3) {
             if (file != 1)
                 squares |= (1ULL << (i - 17));
             if (file != 8)
                 squares |= (1ULL << (i - 15));
         }
 
-        if (rank <= 3) {
+        if (rank <= 6) {
             if (file != 1)
                 squares |= (1ULL << (i + 15));
             if (file != 8)
@@ -58,18 +58,18 @@ static void generateKnightAttackMap() {
         }
 
         if (file <= 6) {
-            if (rank >= 7)
+            if (rank >= 3)
                 squares |= (1ULL << (i - 6));
 
-            if (rank <= 2)
+            if (rank <= 6)
                 squares |= (1ULL << (i + 10));
         }
 
         if (file >= 3) {
-            if (rank >= 7)
+            if (rank >= 3)
                 squares |= (1ULL << (i - 10));
 
-            if (rank <= 2)
+            if (rank <= 6)
                 squares |= (1ULL << (i + 6));
         }
 
@@ -371,21 +371,6 @@ void kingMoves(Bitboard kings, Bitboard friendlyColour, u16 *moves, u8 *moveNumb
     }
 }
 
-void pawnMoves(Bitboard pawns, Bitboard enemyColour, u16 *moves, u8 *moveNumber, u8 colour) {
-    uint8_t i = 0;
-    while (pawns) {
-        i = __builtin_ffsll(pawns) - 1;
-        Bitboard attackingSquares = pawnAttackMap[colour][i] & enemyColour;
-        while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
-        }
-        pawns &= pawns - 1;
-    }
-}
-
 void whitePawnMoves(Bitboard whitePawns, Bitboard blackPieces, u16 *moves, u8 *moveNumber, Bitboard all) {
     uint8_t i = 0;
     while (whitePawns) {
@@ -398,16 +383,19 @@ void whitePawnMoves(Bitboard whitePawns, Bitboard blackPieces, u16 *moves, u8 *m
             attackingSquares &= attackingSquares - 1;
         }
 
-        if ((1ULL << i) & 0xFF00) {
-            if (~all & (1ULL << (i + 8))) {
-                moves[*moveNumber] = (u16)((i & 0b111111) | (((i + 8) & 0b111111) << 6));
-                (*moveNumber)++;
+        if (~all & (1ULL << (i + 8))) {
+            moves[*moveNumber] = (u16)((i & 0b111111) | (((i + 8) & 0b111111) << 6));
+            (*moveNumber)++;
+
+            if ((1ULL << i) & 0xFF00) {
                 if (~all & (1ULL << (i + 16))) {
                     moves[*moveNumber] = (u16)((i & 0b111111) | (((i + 16) & 0b111111) << 6)) | (1 << 13); // 1 << 13 for double push
                     (*moveNumber)++;
                 }
-            }
+            } 
         }
+
+        
 
         whitePawns &= whitePawns - 1;
     }
@@ -417,7 +405,7 @@ void blackPawnMoves(Bitboard blackPawns, Bitboard whitePieces, u16 *moves, u8 *m
     uint8_t i = 0;
     while (blackPawns) {
         i = __builtin_ffsll(blackPawns) - 1;
-        Bitboard attackingSquares = pawnAttackMap[WHITE][i] & BLACK;
+        Bitboard attackingSquares = pawnAttackMap[BLACK][i] & whitePieces;
         while (attackingSquares) {
             uint8_t j = __builtin_ffsll(attackingSquares) - 1;
             moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
@@ -425,16 +413,19 @@ void blackPawnMoves(Bitboard blackPawns, Bitboard whitePieces, u16 *moves, u8 *m
             attackingSquares &= attackingSquares - 1;
         }
 
-        if ((1ULL << i) & 0xFF000000000000) {
-            if (~all & (1ULL << (i - 8))) {
-                moves[*moveNumber] = (u16)((i & 0b111111) | (((i - 8) & 0b111111) << 6));
-                (*moveNumber)++;
+        if (~all & (1ULL << (i - 8))) {
+            moves[*moveNumber] = (u16)((i & 0b111111) | (((i - 8) & 0b111111) << 6));
+            (*moveNumber)++;
+
+            if ((1ULL << i) & 0xFF000000000000) {
                 if (~all & (1ULL << (i - 16))) {
                     moves[*moveNumber] = (u16)((i & 0b111111) | (((i - 16) & 0b111111) << 6)) | (1 << 13); // 1 << 13 for double push
                     (*moveNumber)++;
                 }
             }
         }
+
+        
 
         blackPawns &= blackPawns - 1;
     }
@@ -470,31 +461,29 @@ void bishopMoves(Bitboard bishops, Bitboard allPieces, Bitboard friendlyColour, 
     }
 }
 
-void genPseudoLegalMoves(Board *board, u16 *moves, u8 *moveNumber) {
-    Bitboard all;
+void genPseudoLegalMoves(Board *board, u16 *moves, u8 *moveNumber, u8 colour) {
+    Bitboard all = 0;
     for (int i = 0; i < 12; i++) {
         all |= board->pieces[i];
     }
 
-    knightMoves(board->pieces[W_KNIGHT], board->wPieces, moves, moveNumber);
-    knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
-    kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
-    kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
-    
-    whitePawnMoves(board->pieces[W_PAWN], board->bPieces, moves, moveNumber, all);
-    blackPawnMoves(board->pieces[B_PAWN], board->wPieces, moves, moveNumber, all);
-
-    rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-    rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-    bishopMoves(board->pieces[W_BISHOP], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-    bishopMoves(board->pieces[B_BISHOP], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-
-    rookMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-    bishopMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-
-    rookMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-    bishopMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-    printf("Total Moves: %x\n", *moveNumber);
+    if (colour == WHITE) {
+        knightMoves(board->pieces[W_KNIGHT], board->wPieces, moves, moveNumber);
+        kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
+        whitePawnMoves(board->pieces[W_PAWN], board->bPieces, moves, moveNumber, all);
+        rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+        bishopMoves(board->pieces[W_BISHOP], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+        rookMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+        bishopMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+    } else {
+        knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
+        kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
+        blackPawnMoves(board->pieces[B_PAWN], board->wPieces, moves, moveNumber, all);
+        rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+        bishopMoves(board->pieces[B_BISHOP], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+        rookMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+        bishopMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+    }
 }
 
 void initMoveTables() {

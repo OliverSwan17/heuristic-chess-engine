@@ -1,0 +1,40 @@
+#include "perft.h"
+#include "board.h"
+#include "string.h"
+#include "moves.h"
+#include "stdio.h"
+
+u32 perft(int depth, Board board, u8 colour) {
+    u8 moveNumber = 0;
+    u16 moves[256];
+    genPseudoLegalMoves(&board, moves, &moveNumber, colour);
+
+    if (depth == 1)
+        return moveNumber;
+    
+    u32 moveCount = 0;
+    for (int i = 0; i < moveNumber; i++) {
+        Board newBoard = board;
+        u8 from = moves[i] & 0x3F;
+        u8 to = (moves[i] >> 6) & 0x3F;
+
+        u8 fromPiece = newBoard.mailbox[from];
+        u8 toPiece = newBoard.mailbox[to];
+
+        // printf("From: %u, To: %u, FromPiece %u, ToPiece %u\n", from, to, fromPiece, toPiece);
+        newBoard.mailbox[from] = NO_PIECE;
+        newBoard.mailbox[to] = fromPiece;
+
+        if (toPiece != NO_PIECE) // Cause we have 12 bitboards no bitboard for empty squares
+            newBoard.pieces[toPiece] &= ~(1ULL << to); // Captured square bitboard clear
+        newBoard.pieces[fromPiece] &= ~(1ULL << from); // From square bitboard clear
+        newBoard.pieces[fromPiece] |= (1ULL << to); // To Square bitboard set
+
+        newBoard.wPieces = newBoard.pieces[0] | newBoard.pieces[1] | newBoard.pieces[2] | newBoard.pieces[3] | newBoard.pieces[4] | newBoard.pieces[5];
+        newBoard.bPieces = newBoard.pieces[6] | newBoard.pieces[7] | newBoard.pieces[8] | newBoard.pieces[9] | newBoard.pieces[10] | newBoard.pieces[11];
+
+        moveCount += perft(depth - 1, newBoard, colour ^ 1);;
+    }
+
+    return moveCount;
+}

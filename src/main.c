@@ -3,25 +3,39 @@
 #include <string.h>
 #include <SDL2/SDL_ttf.h>
 #include <unistd.h>
+#include <time.h>
 #include "types.h"
 #include "fen.h"
 #include "draw.h"
 #include "moves.h"
+#include "perft.h"
 
 static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares);
-
 
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
 
 int main(int argc, char* argv[]) {
-    //char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-    char *fen = "rnbqkbnr/p2p3p/6p1/1p5P/4p3/P1pP1p2/1PP1PPP1/RNBQKBNR";
+    char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
     Board board;
     fenToBoard(fen, &board);
     printf("Board size: %llu\n", sizeof(board));
     
     initMoveTables();
+    initMailbox(&board);
+
+    /*
+    for (int depth = 1; depth <= 8; depth++) {
+        clock_t start = clock();
+        u64 nodes = perft(depth, board, WHITE);
+        clock_t end = clock();
+        double time_ms = (double)(end - start) / CLOCKS_PER_SEC * 1000.0;
+        printf("Depth %d: %llu nodes in %.2f ms\n", depth, nodes, time_ms);
+    }
+
+    return 0;
+    */
 
     u8 moveNumber = 0;
     u16 moves[256];
@@ -31,7 +45,7 @@ int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Event e;
     initSDL(&window, &renderer);
-    
+
     int quit = 0;
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
@@ -74,7 +88,7 @@ static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *att
         *moveNumber = 0;
         memset(moves, 0, 256 * sizeof(u16));
         
-        genPseudoLegalMoves(board, moves, moveNumber);
+        genPseudoLegalMoves(board, moves, moveNumber, WHITE);
         for (int i = 0; i < *moveNumber; i++) {
             if ((moves[i] & 0b111111) == index) {
                 *attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
@@ -102,7 +116,7 @@ static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *att
 
     if (buffer[0] == 'l') {
         *moveNumber = 0;
-        genPseudoLegalMoves(board, moves, moveNumber);
+        genPseudoLegalMoves(board, moves, moveNumber, WHITE);
         
         for (int i = 0; i < *moveNumber; i++) {
             u8 from = moves[i] & 0x3F;

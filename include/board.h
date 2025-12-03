@@ -4,6 +4,7 @@
 
 typedef struct {
     Bitboard pieces[12];
+    u8 mailbox[64];
     Bitboard wPieces;
     Bitboard bPieces;
     Bitboard wAttacking;
@@ -26,4 +27,7 @@ enum PieceType {
     B_ROOK,
     B_QUEEN,
     B_KING,
+    NO_PIECE,
 };
+
+void initMailbox(Board *board);
