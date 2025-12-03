@@ -341,148 +341,218 @@ static void generateBishopBlockerMask() {
     }
 }
 
-void knightMoves(Bitboard knights, Bitboard friendlyColour, uint16_t *moves, uint8_t *moveNumber) {
-    u8 i = 0;
+void whiteKnightMoves(Board *board, MoveList *list) {
+    Bitboard knights = board->pieces[W_KNIGHT];
     while (knights) {
-        i = __builtin_ffsll(knights) - 1;
-        Bitboard attackingSquares = knightAttackMap[i] &~ friendlyColour;
-        while (attackingSquares) {
-            u8 j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
+        u8 from = __builtin_ffsll(knights) - 1;
+        Bitboard attacks = knightAttackMap[from] & ~board->wPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
         knights &= knights - 1;
     }
 }
 
-void kingMoves(Bitboard kings, Bitboard friendlyColour, u16 *moves, u8 *moveNumber) {
-    uint8_t i = 0;
-    while (kings) {
-        i = __builtin_ffsll(kings) - 1;
-        Bitboard attackingSquares = kingAttackMap[i] &~ friendlyColour;
-        while (attackingSquares) {
-            u8 j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
+void blackKnightMoves(Board *board, MoveList *list) {
+    Bitboard knights = board->pieces[B_KNIGHT];
+    while (knights) {
+        u8 from = __builtin_ffsll(knights) - 1;
+        Bitboard attacks = knightAttackMap[from] & ~board->bPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
-        kings &= kings - 1;
+        knights &= knights - 1;
     }
 }
 
-void whitePawnMoves(Bitboard whitePawns, Bitboard blackPieces, u16 *moves, u8 *moveNumber, Bitboard all) {
-    uint8_t i = 0;
-    while (whitePawns) {
-        i = __builtin_ffsll(whitePawns) - 1;
-        Bitboard attackingSquares = pawnAttackMap[WHITE][i] & blackPieces;
-        while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
+void whiteKingMoves(Board *board, MoveList *list) {
+    Bitboard king = board->pieces[W_KING];
+    if (king) {
+        u8 from = __builtin_ffsll(king) - 1;
+        Bitboard attacks = kingAttackMap[from] & ~board->wPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
+    }
+}
 
-        if (~all & (1ULL << (i + 8))) {
-            moves[*moveNumber] = (u16)((i & 0b111111) | (((i + 8) & 0b111111) << 6));
-            (*moveNumber)++;
-
-            if ((1ULL << i) & 0xFF00) {
-                if (~all & (1ULL << (i + 16))) {
-                    moves[*moveNumber] = (u16)((i & 0b111111) | (((i + 16) & 0b111111) << 6)) | (1 << 13); // 1 << 13 for double push
-                    (*moveNumber)++;
-                }
-            } 
+void blackKingMoves(Board *board, MoveList *list) {
+    Bitboard king = board->pieces[B_KING];
+    if (king) {
+        u8 from = __builtin_ffsll(king) - 1;
+        Bitboard attacks = kingAttackMap[from] & ~board->bPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
+    }
+}
 
+void whitePawnMoves(Board *board, MoveList *list) {
+    Bitboard pawns = board->pieces[W_PAWN];
+    while (pawns) {
+        u8 from = __builtin_ffsll(pawns) - 1;
+        Bitboard attacks = pawnAttackMap[WHITE][from] & board->bPieces;
         
-
-        whitePawns &= whitePawns - 1;
-    }
-}
-
-void blackPawnMoves(Bitboard blackPawns, Bitboard whitePieces, u16 *moves, u8 *moveNumber, Bitboard all) {
-    uint8_t i = 0;
-    while (blackPawns) {
-        i = __builtin_ffsll(blackPawns) - 1;
-        Bitboard attackingSquares = pawnAttackMap[BLACK][i] & whitePieces;
-        while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
 
-        if (~all & (1ULL << (i - 8))) {
-            moves[*moveNumber] = (u16)((i & 0b111111) | (((i - 8) & 0b111111) << 6));
-            (*moveNumber)++;
-
-            if ((1ULL << i) & 0xFF000000000000) {
-                if (~all & (1ULL << (i - 16))) {
-                    moves[*moveNumber] = (u16)((i & 0b111111) | (((i - 16) & 0b111111) << 6)) | (1 << 13); // 1 << 13 for double push
-                    (*moveNumber)++;
+        if (~board->all & (1ULL << (from + 8))) {
+            list->moves[list->count++] = MAKE_MOVE(from, from + 8);
+            
+            if ((1ULL << from) & 0xFF00ULL) {
+                if (~board->all & (1ULL << (from + 16))) {
+                    list->moves[list->count++] = MAKE_MOVE_FLAGS(from, from + 16, 1);
                 }
             }
         }
-
-        
-
-        blackPawns &= blackPawns - 1;
+        pawns &= pawns - 1;
     }
 }
 
-void rookMoves(Bitboard rooks, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber) {
-    uint8_t i = 0;
+void blackPawnMoves(Board *board, MoveList *list) {
+    Bitboard pawns = board->pieces[B_PAWN];
+    while (pawns) {
+        u8 from = __builtin_ffsll(pawns) - 1;
+        Bitboard attacks = pawnAttackMap[BLACK][from] & board->wPieces;
+        
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
+        }
+
+        if (~board->all & (1ULL << (from - 8))) {
+            list->moves[list->count++] = MAKE_MOVE(from, from - 8);
+            
+            if ((1ULL << from) & 0xFF000000000000ULL) {
+                if (~board->all & (1ULL << (from - 16))) {
+                    list->moves[list->count++] = MAKE_MOVE_FLAGS(from, from - 16, 1);
+                }
+            }
+        }
+        pawns &= pawns - 1;
+    }
+}
+
+void whiteRookMoves(Board *board, MoveList *list) {
+    Bitboard rooks = board->pieces[W_ROOK];
     while (rooks) {
-        i = __builtin_ffsll(rooks) - 1;
-        Bitboard attackingSquares = rookAttackMap[i][(rookMagics[i] * (rookBlockerMask[i] & allPieces)) >> rookShifts[i]] &~ friendlyColour;
-        while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
+        u8 from = __builtin_ffsll(rooks) - 1;
+        Bitboard attacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]] & ~board->wPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
         rooks &= rooks - 1;
     }
 }
 
-void bishopMoves(Bitboard bishops, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber) {
-    uint8_t i = 0;
+void blackRookMoves(Board *board, MoveList *list) {
+    Bitboard rooks = board->pieces[B_ROOK];
+    while (rooks) {
+        u8 from = __builtin_ffsll(rooks) - 1;
+        Bitboard attacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]] & ~board->bPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
+        }
+        rooks &= rooks - 1;
+    }
+}
+
+void whiteBishopMoves(Board *board, MoveList *list) {
+    Bitboard bishops = board->pieces[W_BISHOP];
     while (bishops) {
-        i = __builtin_ffsll(bishops) - 1;
-        Bitboard attackingSquares = bishopAttackMap[i][(bishopMagics[i] * (bishopBlockerMask[i] & allPieces)) >> bishopShifts[i]] &~ friendlyColour;
-        while (attackingSquares) {
-            uint8_t j = __builtin_ffsll(attackingSquares) - 1;
-            moves[*moveNumber] = (u16)((i & 0b111111) | ((j & 0b111111) << 6));
-            (*moveNumber)++;
-            attackingSquares &= attackingSquares - 1;
+        u8 from = __builtin_ffsll(bishops) - 1;
+        Bitboard attacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]] & ~board->wPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
         }
         bishops &= bishops - 1;
     }
 }
 
-void genPseudoLegalMoves(Board *board, u16 *moves, u8 *moveNumber, u8 colour) {
-    Bitboard all = 0;
-    for (int i = 0; i < 12; i++) {
-        all |= board->pieces[i];
+void blackBishopMoves(Board *board, MoveList *list) {
+    Bitboard bishops = board->pieces[B_BISHOP];
+    while (bishops) {
+        u8 from = __builtin_ffsll(bishops) - 1;
+        Bitboard attacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]] & ~board->bPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
+        }
+        bishops &= bishops - 1;
     }
+}
 
+void whiteQueenMoves(Board *board, MoveList *list) {
+    Bitboard queens = board->pieces[W_QUEEN];
+    while (queens) {
+        u8 from = __builtin_ffsll(queens) - 1;
+        Bitboard rookAttacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]];
+        Bitboard bishopAttacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]];
+        Bitboard attacks = (rookAttacks | bishopAttacks) & ~board->wPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
+        }
+        queens &= queens - 1;
+    }
+}
+
+void blackQueenMoves(Board *board, MoveList *list) {
+    Bitboard queens = board->pieces[B_QUEEN];
+    while (queens) {
+        u8 from = __builtin_ffsll(queens) - 1;
+        Bitboard rookAttacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]];
+        Bitboard bishopAttacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]];
+        Bitboard attacks = (rookAttacks | bishopAttacks) & ~board->bPieces;
+        while (attacks) {
+            u8 to = __builtin_ffsll(attacks) - 1;
+            list->moves[list->count++] = MAKE_MOVE(from, to);
+            attacks &= attacks - 1;
+        }
+        queens &= queens - 1;
+    }
+}
+
+void genPseudoLegalMoves(Board *board, MoveList *list, u8 colour) {
+    board->wPieces = board->pieces[W_PAWN] | board->pieces[W_KNIGHT] | board->pieces[W_BISHOP] | board->pieces[W_ROOK] | board->pieces[W_QUEEN] | board->pieces[W_KING];
+    board->bPieces = board->pieces[B_PAWN] | board->pieces[B_KNIGHT] | board->pieces[B_BISHOP] | board->pieces[B_ROOK] | board->pieces[B_QUEEN] | board->pieces[B_KING];
+    board->all = board->wPieces | board->bPieces;
+    list->count = 0;
+    
     if (colour == WHITE) {
-        knightMoves(board->pieces[W_KNIGHT], board->wPieces, moves, moveNumber);
-        kingMoves(board->pieces[W_KING], board->wPieces, moves, moveNumber);
-        whitePawnMoves(board->pieces[W_PAWN], board->bPieces, moves, moveNumber, all);
-        rookMoves(board->pieces[W_ROOK], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-        bishopMoves(board->pieces[W_BISHOP], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-        rookMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
-        bishopMoves(board->pieces[W_QUEEN], board->wPieces | board->bPieces, board->wPieces, moves, moveNumber);
+        whiteKnightMoves(board, list);
+        whiteKingMoves(board, list);
+        whitePawnMoves(board, list);
+        whiteRookMoves(board, list);
+        whiteBishopMoves(board, list);
+        whiteQueenMoves(board, list);
     } else {
-        knightMoves(board->pieces[B_KNIGHT], board->bPieces, moves, moveNumber);
-        kingMoves(board->pieces[B_KING], board->bPieces, moves, moveNumber);
-        blackPawnMoves(board->pieces[B_PAWN], board->wPieces, moves, moveNumber, all);
-        rookMoves(board->pieces[B_ROOK], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-        bishopMoves(board->pieces[B_BISHOP], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-        rookMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
-        bishopMoves(board->pieces[B_QUEEN], board->wPieces | board->bPieces, board->bPieces, moves, moveNumber);
+        blackKnightMoves(board, list);
+        blackKingMoves(board, list);
+        blackPawnMoves(board, list);
+        blackRookMoves(board, list);
+        blackBishopMoves(board, list);
+        blackQueenMoves(board, list);
     }
 }
 

@@ -5,18 +5,18 @@
 #include "stdio.h"
 
 u32 perft(int depth, Board board, u8 colour) {
-    u8 moveNumber = 0;
-    u16 moves[256];
-    genPseudoLegalMoves(&board, moves, &moveNumber, colour);
+    MoveList moveList = {0};
+
+    genPseudoLegalMoves(&board, &moveList, colour);
 
     if (depth == 1)
-        return moveNumber;
+        return moveList.count;
     
     u32 moveCount = 0;
-    for (int i = 0; i < moveNumber; i++) {
+    for (int i = 0; i < moveList.count; i++) {
         Board newBoard = board;
-        u8 from = moves[i] & 0x3F;
-        u8 to = (moves[i] >> 6) & 0x3F;
+        u8 from = moveList.moves[i] & 0x3F;
+        u8 to = (moveList.moves[i] >> 6) & 0x3F;
 
         u8 fromPiece = newBoard.mailbox[from];
         u8 toPiece = newBoard.mailbox[to];
@@ -32,6 +32,9 @@ u32 perft(int depth, Board board, u8 colour) {
 
         newBoard.wPieces = newBoard.pieces[0] | newBoard.pieces[1] | newBoard.pieces[2] | newBoard.pieces[3] | newBoard.pieces[4] | newBoard.pieces[5];
         newBoard.bPieces = newBoard.pieces[6] | newBoard.pieces[7] | newBoard.pieces[8] | newBoard.pieces[9] | newBoard.pieces[10] | newBoard.pieces[11];
+
+        // Check if move is legal
+
 
         moveCount += perft(depth - 1, newBoard, colour ^ 1);;
     }

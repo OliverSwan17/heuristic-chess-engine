@@ -25,8 +25,8 @@ int main(int argc, char* argv[]) {
     initMoveTables();
     initMailbox(&board);
 
-    /*
-    for (int depth = 1; depth <= 8; depth++) {
+    
+    for (int depth = 1; depth <= 7; depth++) {
         clock_t start = clock();
         u64 nodes = perft(depth, board, WHITE);
         clock_t end = clock();
@@ -35,8 +35,7 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
-    */
-
+    
     u8 moveNumber = 0;
     u16 moves[256];
     memset(moves, 0, 256 * sizeof(u16));
@@ -71,6 +70,7 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
 
 static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {
     char buffer[32];

@@ -5,6 +5,7 @@
 typedef struct {
     Bitboard pieces[12];
     u8 mailbox[64];
+    Bitboard all;
     Bitboard wPieces;
     Bitboard bPieces;
     Bitboard wAttacking;

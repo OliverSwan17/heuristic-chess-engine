@@ -3,6 +3,9 @@
 #include "types.h"
 #include "board.h"
 
+#define MAKE_MOVE(from, to) (((from) & 0x3F) | (((to) & 0x3F) << 6))
+#define MAKE_MOVE_FLAGS(from, to, flags) (((from) & 0x3F) | (((to) & 0x3F) << 6) | (((flags) & 0xF) << 12))
+
 #define GET_FROM(move) ((move) & 0x3F)
 #define GET_TO(move) (((move) >> 6) & 0x3F)
 #define GET_FLAGS(move) (((move) >> 12) & 0xF)
@@ -11,14 +14,13 @@
 #define SET_TO(to) ((u16) (to) << 6)
 #define SET_FLAGS(flags) ((u16) (flags) << 12)
 
-void initMoveTables();
-void genPseudoLegalMoves(Board *board, u16 *moves, u8 *moveNumber, u8 colour);
+typedef struct {
+    u16 moves[256];
+    u8 count;
+} MoveList;
 
-void bishopMoves(Bitboard bishops, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber);
-void knightMoves(Bitboard knights, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
-void kingMoves(Bitboard kings, Bitboard colouredPieces, u16 *moves, u8 *moveNumber);
-void pawnMoves(Bitboard pawns, Bitboard colouredPieces, u16 *moves, u8 *moveNumber, u8 colour);
-void rookMoves(Bitboard rooks, Bitboard allPieces, Bitboard friendlyColour, u16 *moves, u8 *moveNumber);
+void initMoveTables();
+void genPseudoLegalMoves(Board *board, MoveList *moveList, u8 colour);
 
 // Move encoding (32 bits):
 // ┬────────┬────────┬────────┬
