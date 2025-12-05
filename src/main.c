@@ -10,7 +10,7 @@
 #include "moves.h"
 #include "perft.h"
 
-static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares);
+static int terminalInput(Board *board, MoveList moveList, Bitboard *attackingSquares);
 
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
@@ -19,13 +19,14 @@ int main(int argc, char* argv[]) {
     char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
     Board board;
+    MoveList moveList;
     fenToBoard(fen, &board);
     printf("Board size: %llu\n", sizeof(board));
     
     initMoveTables();
     initMailbox(&board);
 
-    
+    /*
     for (int depth = 1; depth <= 7; depth++) {
         clock_t start = clock();
         u64 nodes = perft(depth, board, WHITE);
@@ -35,10 +36,8 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
+    */
     
-    u8 moveNumber = 0;
-    u16 moves[256];
-    memset(moves, 0, 256 * sizeof(u16));
     Bitboard attackingSquares = 0;
 
     SDL_Init(SDL_INIT_VIDEO);
@@ -64,7 +63,7 @@ int main(int argc, char* argv[]) {
             drawNumbers(renderer);
         SDL_RenderPresent(renderer);
         
-        if (terminalInput(&board, moves, &moveNumber, &attackingSquares))
+        if (terminalInput(&board, moveList, &attackingSquares))
             break;
     }
 
@@ -72,7 +71,7 @@ int main(int argc, char* argv[]) {
 }
 
 
-static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *attackingSquares) {
+static int terminalInput(Board *board, MoveList moveList, Bitboard *attackingSquares) {
     char buffer[32];
     memset(&buffer, 0, 32);
     fgets(buffer, sizeof(buffer), stdin);
@@ -85,13 +84,12 @@ static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *att
         u8 index = atoi(&buffer[1]);
 
         *attackingSquares = 0;
-        *moveNumber = 0;
-        memset(moves, 0, 256 * sizeof(u16));
+        moveList.count = 0;
         
-        genPseudoLegalMoves(board, moves, moveNumber, WHITE);
-        for (int i = 0; i < *moveNumber; i++) {
-            if ((moves[i] & 0b111111) == index) {
-                *attackingSquares |= (1ULL << ((moves[i] & 0b111111000000) >> 6));
+        genPseudoLegalMoves(board, &moveList, WHITE);
+        for (int i = 0; i < moveList.count; i++) {
+            if ((moveList.moves[i] & 0b111111) == index) {
+                *attackingSquares |= (1ULL << ((moveList.moves[i] & 0b111111000000) >> 6));
                 //printf("%u %u\n", moves[i] & 0b111111, (moves[i] & 0b111111000000) >> 6);
             }
         }
@@ -115,12 +113,12 @@ static int terminalInput(Board *board, u16 *moves, u8 *moveNumber, Bitboard *att
     }
 
     if (buffer[0] == 'l') {
-        *moveNumber = 0;
-        genPseudoLegalMoves(board, moves, moveNumber, WHITE);
+        moveList.count = 0;
+        genPseudoLegalMoves(board, &moveList, WHITE);
         
-        for (int i = 0; i < *moveNumber; i++) {
-            u8 from = moves[i] & 0x3F;
-            u8 to = (moves[i] >> 6) & 0x3F;
+        for (int i = 0; i < moveList.count; i++) {
+            u8 from = moveList.moves[i] & 0x3F;
+            u8 to = (moveList.moves[i] >> 6) & 0x3F;
             *attackingSquares = (1ULL << from) | (1ULL << to);
 
             for (int i = 0; i < 100; i++) {
