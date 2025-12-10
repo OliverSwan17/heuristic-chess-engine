@@ -407,15 +407,23 @@ void whitePawnMoves(Board *board, MoveList *list) {
             attacks &= attacks - 1;
         }
 
+        // Pushes
         if (~board->all & (1ULL << (from + 8))) {
             list->moves[list->count++] = MAKE_MOVE(from, from + 8);
             
             if ((1ULL << from) & 0xFF00ULL) {
                 if (~board->all & (1ULL << (from + 16))) {
-                    list->moves[list->count++] = MAKE_MOVE_FLAGS(from, from + 16, 1);
+                    list->moves[list->count++] = MAKE_MOVE_FLAGS(from, from + 16, DOUBLE_PAWN_PUSH);
                 }
             }
         }
+
+        // Enpassant
+        if (board->enPassant) {
+            if (pawnAttackMap[WHITE][from] & (1ULL << board->enPassant))
+                list->moves[list->count++] = MAKE_MOVE_FLAGS(from, board->enPassant, EP_CAPTURE);
+        }
+
         pawns &= pawns - 1;
     }
 }
@@ -437,10 +445,17 @@ void blackPawnMoves(Board *board, MoveList *list) {
             
             if ((1ULL << from) & 0xFF000000000000ULL) {
                 if (~board->all & (1ULL << (from - 16))) {
-                    list->moves[list->count++] = MAKE_MOVE_FLAGS(from, from - 16, 1);
+                    list->moves[list->count++] = MAKE_MOVE_FLAGS(from, from - 16, DOUBLE_PAWN_PUSH);
                 }
             }
         }
+
+        // Enpassant
+        if (board->enPassant) {
+            if (pawnAttackMap[BLACK][from] & (1ULL << board->enPassant))
+                list->moves[list->count++] = MAKE_MOVE_FLAGS(from, board->enPassant, EP_CAPTURE);
+        }
+
         pawns &= pawns - 1;
     }
 }

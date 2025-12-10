@@ -15,6 +15,7 @@ u32 perft(int depth, Board board, u8 colour) {
     u32 moveCount = 0;
     for (int i = 0; i < moveList.count; i++) {
         Board newBoard = board;
+        newBoard.enPassant = 0;
         u8 from = moveList.moves[i] & 0x3F;
         u8 to = (moveList.moves[i] >> 6) & 0x3F;
 
@@ -30,6 +31,18 @@ u32 perft(int depth, Board board, u8 colour) {
         newBoard.pieces[fromPiece] &= ~(1ULL << from); // From square bitboard clear
         newBoard.pieces[fromPiece] |= (1ULL << to); // To Square bitboard set
 
+        
+        if (GET_FLAGS(moveList.moves[i]) == DOUBLE_PAWN_PUSH)
+            newBoard.enPassant = (colour == BLACK) ? (to + 8) : (to - 8);
+
+        if (GET_FLAGS(moveList.moves[i]) == EP_CAPTURE) {
+            u8 capturedPawnIndex = board.enPassant + ((colour == BLACK) ? -8 : 8);
+            newBoard.pieces[W_PAWN + 6 * (colour ^ 1)] &= ~(1ULL << capturedPawnIndex); // Clearing pawn from bitboard
+            newBoard.mailbox[capturedPawnIndex] = NO_PIECE; // Clearing pawn from mailbox
+            newBoard.enPassant = 0; // Clear for the next position
+        }
+        
+        
         newBoard.wPieces = newBoard.pieces[0] | newBoard.pieces[1] | newBoard.pieces[2] | newBoard.pieces[3] | newBoard.pieces[4] | newBoard.pieces[5];
         newBoard.bPieces = newBoard.pieces[6] | newBoard.pieces[7] | newBoard.pieces[8] | newBoard.pieces[9] | newBoard.pieces[10] | newBoard.pieces[11];
         newBoard.all = newBoard.wPieces | newBoard.bPieces;

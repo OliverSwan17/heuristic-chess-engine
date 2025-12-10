@@ -14,6 +14,21 @@
 #define SET_TO(to) ((u16) (to) << 6)
 #define SET_FLAGS(flags) ((u16) (flags) << 12)
 
+//#define QUIET_MOVE  0	
+#define DOUBLE_PAWN_PUSH  1	
+//#define king castle  2	
+//#define queen castle  3	
+//#define captures  4	
+#define EP_CAPTURE  5	
+//#define knight-promotion  8	
+//#define bishop-promotion  9	
+//#define rook-promotion  10	
+//#define queen-promotion  11	
+//#define knight-promo capture  12	
+//#define bishop-promo capture  13	
+//#define rook-promo capture  14	
+//#define queen-promo capture  15	
+
 typedef struct {
     u16 moves[256];
     u8 count;
