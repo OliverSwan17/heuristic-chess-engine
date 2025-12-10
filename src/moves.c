@@ -87,7 +87,7 @@ static void generateKingAttackMap() {
             kingSquares |= (1ULL << (i - 8));
         if (i % 8)
             kingSquares |= (1ULL << (i - 1));
-        if (i % 8 != 0)
+        if ((i+1) % 8 != 0)
             kingSquares |= (1ULL << (i + 1));
         if (!(i >= 56 || ((i + 1) % 8 == 0)))
             kingSquares |= (1ULL << (i + 9));
@@ -554,6 +554,139 @@ void genPseudoLegalMoves(Board *board, MoveList *list, u8 colour) {
         blackBishopMoves(board, list);
         blackQueenMoves(board, list);
     }
+}
+
+// static Bitboard knightAttackMap[64];
+// static Bitboard kingAttackMap[64];
+// static Bitboard pawnAttackMap[2][64];
+// static Bitboard rookBlockerMask[64];
+// static Bitboard rookAttackMap[64][4096];
+// static Bitboard bishopBlockerMask[64];
+// static Bitboard bishopAttackMap[64][512];
+
+u8 isUnderAttack(Board *board, u8 index, u8 colour) {   
+    Bitboard bitboard = 0;
+    Bitboard attacks = 0;
+
+    if (colour == BLACK) {
+        bitboard = board->pieces[W_KNIGHT];
+        while (bitboard) {
+            u8 from = __builtin_ffsll(bitboard) - 1;
+            attacks = knightAttackMap[from];
+            if (attacks & (1ULL << index))
+                return 1;
+            bitboard &= bitboard - 1;
+        }
+
+        bitboard = board->pieces[W_KING];
+        while (bitboard) {
+            u8 from = __builtin_ffsll(bitboard) - 1;
+            attacks = kingAttackMap[from];
+            if (attacks & (1ULL << index))
+                return 1;
+            bitboard &= bitboard - 1;
+        }
+
+        bitboard = board->pieces[W_PAWN];
+        while (bitboard) {
+            u8 from = __builtin_ffsll(bitboard) - 1;
+            attacks = pawnAttackMap[WHITE][from];
+            if (attacks & (1ULL << index))
+                return 1;
+            bitboard &= bitboard - 1;
+        }
+
+        bitboard = board->pieces[W_BISHOP];
+        while (bitboard) {
+            u8 from = __builtin_ffsll(bitboard) - 1;
+            attacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]];
+            if (attacks & (1ULL << index))
+                return 1;
+            bitboard &= bitboard - 1;
+        }
+
+        bitboard = board->pieces[W_ROOK];
+        while (bitboard) {
+            u8 from = __builtin_ffsll(bitboard) - 1;
+            attacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]];
+            if (attacks & (1ULL << index))
+                return 1;
+            bitboard &= bitboard - 1;
+        }
+
+        bitboard = board->pieces[W_QUEEN];
+        while (bitboard) {
+            u8 from = __builtin_ffsll(bitboard) - 1;
+            attacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]];
+            if (attacks & (1ULL << index))
+                return 1;
+            attacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]];
+            if (attacks & (1ULL << index))
+                return 1;
+            bitboard &= bitboard - 1;
+        }
+        
+        return 0;
+    }
+
+    bitboard = board->pieces[B_KNIGHT];
+    while (bitboard) {
+        u8 from = __builtin_ffsll(bitboard) - 1;
+        attacks = knightAttackMap[from];
+        if (attacks & (1ULL << index))
+            return 1;
+        bitboard &= bitboard - 1;
+    }
+
+    bitboard = board->pieces[B_KING];
+    while (bitboard) {
+        u8 from = __builtin_ffsll(bitboard) - 1;
+        attacks = kingAttackMap[from];
+        if (attacks & (1ULL << index))
+            return 1;
+        bitboard &= bitboard - 1;
+    }
+
+    bitboard = board->pieces[B_PAWN];
+    while (bitboard) {
+        u8 from = __builtin_ffsll(bitboard) - 1;
+        attacks = pawnAttackMap[BLACK][from];
+        if (attacks & (1ULL << index))
+            return 1;
+        bitboard &= bitboard - 1;
+    }
+
+    bitboard = board->pieces[B_BISHOP];
+    while (bitboard) {
+        u8 from = __builtin_ffsll(bitboard) - 1;
+        attacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]];
+        if (attacks & (1ULL << index))
+            return 1;
+        bitboard &= bitboard - 1;
+    }
+
+    bitboard = board->pieces[B_ROOK];
+    while (bitboard) {
+        u8 from = __builtin_ffsll(bitboard) - 1;
+        attacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]];
+        if (attacks & (1ULL << index))
+            return 1;
+        bitboard &= bitboard - 1;
+    }
+
+    bitboard = board->pieces[B_QUEEN];
+    while (bitboard) {
+        u8 from = __builtin_ffsll(bitboard) - 1;
+        attacks = bishopAttackMap[from][(bishopMagics[from] * (bishopBlockerMask[from] & board->all)) >> bishopShifts[from]];
+        if (attacks & (1ULL << index))
+            return 1;
+        attacks = rookAttackMap[from][(rookMagics[from] * (rookBlockerMask[from] & board->all)) >> rookShifts[from]];
+        if (attacks & (1ULL << index))
+            return 1;
+        bitboard &= bitboard - 1;
+    }
+    
+    return 0;
 }
 
 void initMoveTables() {

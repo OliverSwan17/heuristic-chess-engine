@@ -5,12 +5,12 @@
 #include "stdio.h"
 
 u32 perft(int depth, Board board, u8 colour) {
+    if (depth == 0)
+        return 1;
+
     MoveList moveList = {0};
 
     genPseudoLegalMoves(&board, &moveList, colour);
-
-    if (depth == 1)
-        return moveList.count;
     
     u32 moveCount = 0;
     for (int i = 0; i < moveList.count; i++) {
@@ -32,11 +32,20 @@ u32 perft(int depth, Board board, u8 colour) {
 
         newBoard.wPieces = newBoard.pieces[0] | newBoard.pieces[1] | newBoard.pieces[2] | newBoard.pieces[3] | newBoard.pieces[4] | newBoard.pieces[5];
         newBoard.bPieces = newBoard.pieces[6] | newBoard.pieces[7] | newBoard.pieces[8] | newBoard.pieces[9] | newBoard.pieces[10] | newBoard.pieces[11];
+        newBoard.all = newBoard.wPieces | newBoard.bPieces;
 
-        // Check if move is legal
+        u8 kingIndex = 0;
+        
+        for (int j = 0; j < 64; j++) {
+            if ((1ULL << j) & newBoard.pieces[W_KING + 6 * colour]) {
+                kingIndex = j;
+            }
+        }
 
-
-        moveCount += perft(depth - 1, newBoard, colour ^ 1);;
+        if (isUnderAttack(&newBoard, kingIndex, colour)){
+            continue;
+        } 
+        moveCount += perft(depth - 1, newBoard, colour ^ 1);
     }
 
     return moveCount;

@@ -16,7 +16,9 @@ static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
 
 int main(int argc, char* argv[]) {
-    char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    char *fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"; // Starting Position
+    //char *fen = "4k3/8/8/7Q/8/8/8/8";
+    //char *fen = "K7/8/1qp5/8/8/8/8/8";
 
     Board board;
     MoveList moveList;
@@ -26,17 +28,13 @@ int main(int argc, char* argv[]) {
     initMoveTables();
     initMailbox(&board);
 
-    /*
-    for (int depth = 1; depth <= 7; depth++) {
+    for (int depth = 1; depth <= 5; depth++) {
         clock_t start = clock();
-        u64 nodes = perft(depth, board, WHITE);
+        u64 nodes = perft(depth, board, BLACK);
         clock_t end = clock();
         double time_ms = (double)(end - start) / CLOCKS_PER_SEC * 1000.0;
         printf("Depth %d: %llu nodes in %.2f ms\n", depth, nodes, time_ms);
     }
-
-    return 0;
-    */
     
     Bitboard attackingSquares = 0;
 
@@ -138,7 +136,7 @@ static int terminalInput(Board *board, MoveList moveList, Bitboard *attackingSqu
                         return 1;
                     }
                 }
-                usleep(10000);  // 10ms * 100 = 1 second total
+                usleep(5000);  // 10ms * 100 = 1 second total
             }
         }
     }

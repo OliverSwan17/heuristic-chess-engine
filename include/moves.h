@@ -21,6 +21,7 @@ typedef struct {
 
 void initMoveTables();
 void genPseudoLegalMoves(Board *board, MoveList *moveList, u8 colour);
+u8 isUnderAttack(Board *board, u8 index, u8 colour);
 
 // Move encoding (32 bits):
 // ┬────────┬────────┬────────┬
